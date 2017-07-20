@@ -172,7 +172,7 @@ classdef NiftiFS < handle
                 case '{scans}'
                     if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img'));
                         entry = {[obj.scan_strmatch '.img']};
-                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img'));
+                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii'));
                         entry = {[obj.scan_strmatch '.nii']};
                     end
                 otherwise
