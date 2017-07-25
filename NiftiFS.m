@@ -8,6 +8,7 @@ classdef NiftiFS < handle
         run_strmatch = '*'
         scan_strmatch = '*'
         group_strmatch = '*'
+        structural_strmatch = '*'
         subjects
         runs
         groups
@@ -39,7 +40,7 @@ classdef NiftiFS < handle
                 obj.functional_dirstruct = '{top_level}/{subjects}/{scans}';
                 warning('no dirstruct given, default= {top_level}/{subjects}/{scans}');
             else
-                obj.functional_dirstruct = lower(dirstruct);
+                obj.functional_dirstruct = dirstruct;
                 
             end
         end
@@ -48,7 +49,7 @@ classdef NiftiFS < handle
                 obj.structural_dirstruct = '{top_level}/{subjects}/{scans}';
                 warning('no dirstruct given, default= {top_level}/{subjects}/{scans}');
             else
-                obj.structural_dirstruct = lower(dirstruct);
+                obj.structural_dirstruct = dirstruct;
             end
         end
         function set_subject_strmatch(obj, strmatch)
@@ -62,6 +63,9 @@ classdef NiftiFS < handle
         end
         function set_group_strmatch(obj, strmatch)
            obj.group_strmatch = strmatch; 
+        end
+        function set_structural_strmatch(obj, strmatch)
+            obj.structural_strmatch = strmatch; 
         end
         function set_subjects(obj)
             ndir = strsplit(obj.functional_dirstruct, '/{subjects}/');
@@ -93,7 +97,42 @@ classdef NiftiFS < handle
         function scans = get_functional_scans(obj)
             scans = expand_folders(obj, strsplit(obj.functional_dirstruct, filesep));
         end
+        function scans = get_structural_scans(obj)
+            scans = expand_folders(obj, strsplit(obj.structural_dirstruct, filesep));
+        end
         
+        function subject_struct = get_subj_scans(obj)
+           if(isempty(obj.subjects))
+              error('no subjects');
+           end
+           scans = strrep(get_functional_scans(obj), obj.top_level, '');
+           path = strrep(obj.path_to_subjects, obj.top_level, '');
+           subject_struct = struct('name', {}, 'subject_scans', {}, 'subject_runs', {});
+           for i=1:size(path, 1);
+               subject_struct(i).name = path{i, 1};
+               subject_struct(i).subject_scans = scans(~cellfun(@isempty, strfind(scans, path{i,1})));
+               if ~isempty(any(~cellfun(@isempty, strfind(obj.path_to_runs, path{i, 1}))))
+                   subj_runs = strrep(obj.path_to_runs(~cellfun(@isempty, ...
+                       strfind(obj.path_to_runs, path{i, 1}))), ...
+                       obj.top_level, '');
+                   for j = 1:size(subj_runs)
+                       subj_runs{j, 2} = scans(~cellfun(@isempty, strfind(scans, subj_runs{j,1})));
+                   end
+                   subject_struct(i).subject_runs = subj_runs;
+               end
+           end
+        end
+        
+        
+        
+        function get_structured_functionals(obj)
+           ds = obj.functional_dirstruct;
+           splt = strsplit(ds, filesep);
+           eval([strrep(strrep(splt{1}, '{', ''), '}', '') '=struct();']);
+           for i = 1:size(splt,2)
+               splt{i};
+           end
+        end
         %% Clear properties
         function clear_subjects(obj)
             obj.path_to_subjects = {};
@@ -110,13 +149,17 @@ classdef NiftiFS < handle
 
             filepath = cell([0, 1]);
             for i = 1:size(cellpath, 2)
+                only_dir = i ~= size(cellpath,2);
                 if strcmp(cellpath{i}, '{subjects}') && ~isempty(obj.path_to_subjects)
                     filepath = obj.path_to_subjects;
+                    
                 elseif strcmp(cellpath{i}, '{runs}') && ~isempty(obj.path_to_runs)
                     filepath = obj.path_to_runs;
+                    
                 else
                     entry = obj.replace_entry(cellpath{i});
-                    filepath = obj.cartesian(filepath, entry, i ~= size(cellpath,2));
+                    filepath = obj.cartesian(filepath, entry, only_dir ||  ...
+                        any(strcmp(cellpath{i}, {'{subjects}';'{runs}';'{groups}'})));
                 end
             end
         end
@@ -160,7 +203,7 @@ classdef NiftiFS < handle
             end
         end
         function entry = replace_entry(obj,entry)
-            switch entry
+            switch lower(entry)
                 case '{top_level}'
                     entry =  {obj.top_level};
                 case '{subjects}'
@@ -169,11 +212,15 @@ classdef NiftiFS < handle
                     entry = {obj.run_strmatch};
                 case '{groups}'
                     entry = {obj.group_strmatch};
+                case '{structs}'
+                    entry = {obj.structural_strmatch};
                 case '{scans}'
                     if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img'));
                         entry = {[obj.scan_strmatch '.img']};
                     elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii'));
                         entry = {[obj.scan_strmatch '.nii']};
+                    else 
+                        entry = {obj.scan_strmatch};
                     end
                 otherwise
                     entry = {entry};
@@ -220,6 +267,43 @@ classdef NiftiFS < handle
               ret{i} = feval(func, cell_list{i});
            end
 
+        end
+        function ret = batch_parfor(obj,  func, cell_list)
+           tl =  obj.top_level;
+           parfor i = 1:size(cell_list, 1)
+              cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
+              if(nargout(func) ==0)
+                feval(func, char(cl));
+              else
+                 ret{i} = feval(func, char(cl));
+              end
+           end
+        end
+        function ret = batch_serial(obj,  func, cell_list)
+           tl =  obj.top_level;
+           for i = 1:size(cell_list, 1)
+              cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
+              if(nargout(func) ==0)
+                feval(func, char(cl));
+              else
+                ret{i} = feval(func, char(cl));
+              end
+           end
+        end
+        function ret = batch_parfeval(obj,  func, cell_list)
+           tl =  obj.top_level;
+           for i = 1:size(cell_list, 1)
+              cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
+              f(i) = parfeval(gcp(), func, 1, char(cl));
+           end
+           for i = 1:size(cell_list, 1)
+             if(nargout(func)==0)
+                 fetchNext(f);
+             else
+             [completedIdx,value] = fetchNext(f);
+             ret{completedIdx} = value;
+             end
+           end
         end
         
     end
