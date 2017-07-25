@@ -125,14 +125,6 @@ classdef NiftiFS < handle
         
         
         
-        function get_structured_functionals(obj)
-           ds = obj.functional_dirstruct;
-           splt = strsplit(ds, filesep);
-           eval([strrep(strrep(splt{1}, '{', ''), '}', '') '=struct();']);
-           for i = 1:size(splt,2)
-               splt{i};
-           end
-        end
         %% Clear properties
         function clear_subjects(obj)
             obj.path_to_subjects = {};
