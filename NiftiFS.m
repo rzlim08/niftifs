@@ -1,4 +1,4 @@
-classdef NiftiFS < handle
+ classdef NiftiFS < handle
     properties ( SetAccess = private)
         functional_dirstruct = ''
         structural_dirstruct = ''
@@ -27,6 +27,9 @@ classdef NiftiFS < handle
     methods
         
         %% Constructor
+        
+        % Takes the folder that encompasses all functional scans.
+        % Structural scans are able to exist in a separate folder
         function obj = NiftiFS(top_level_dir)
             if nargin ~= 1
                 error('A NiftiFS must take as a parameter, a top level directory which contains all Functional scans');
@@ -35,7 +38,13 @@ classdef NiftiFS < handle
         end
         
         %% Set properties
+       
         function set_functional_dirstruct(obj,dirstruct)
+            % takes a string that describes the directory structure to the
+            % functional scans. A directory structure consists of a file
+            % path string, with special folders (eg. subjects, runs) in
+            % curly braces eg. {subjects}. Each dirstruct must start with
+            % {top_level}. 
             if nargin <2
                 obj.functional_dirstruct = '{top_level}/{subjects}/{scans}';
                 warning('no dirstruct given, default= {top_level}/{subjects}/{scans}');
@@ -45,6 +54,11 @@ classdef NiftiFS < handle
             end
         end
         function set_structural_dirstruct(obj,dirstruct)
+            % takes a string that describes the directory structure to the
+            % structural scans. A directory structure consists of a file
+            % path string, with special folders (eg. subjects, runs) in
+            % curly braces eg. {subjects}. Each dirstruct must start with
+            % {top_level}
             if nargin <2
                 obj.structural_dirstruct = '{top_level}/{subjects}/{scans}';
                 warning('no dirstruct given, default= {top_level}/{subjects}/{scans}');
@@ -52,27 +66,38 @@ classdef NiftiFS < handle
                 obj.structural_dirstruct = dirstruct;
             end
         end
+        
         function set_subject_strmatch(obj, strmatch)
+            % sets a string to match for the subject (eg. 'WM*' for WM001, 
+            % WM002, etc), can be left as * if all folders in the level are
+            % subjects
             obj.subject_strmatch = strmatch;
         end
         function set_run_strmatch(obj, strmatch)
+            % see subject strmatch
             obj.run_strmatch = strmatch;
         end
         function set_scan_strmatch(obj, strmatch)
+            % see subject strmatch
             obj.scan_strmatch = strmatch;
         end
         function set_group_strmatch(obj, strmatch)
+            % see subject strmatch
            obj.group_strmatch = strmatch; 
         end
         function set_structural_strmatch(obj, strmatch)
+            % see subject strmatch
             obj.structural_strmatch = strmatch; 
         end
         function set_subjects(obj)
+            % sets the 'subjects' variable to the folders that match the
+            % subject_strmatch in the position as given by the dirstruct
             ndir = strsplit(obj.functional_dirstruct, '/{subjects}/');
             obj.path_to_subjects = expand_folders(obj, [strsplit(ndir{1}, filesep) '{subjects}']);
             obj.subjects = unique(obj.get_files(obj.path_to_subjects));
         end
         function set_runs(obj)
+            % see set_subjects
             if(~obj.run_strmatch)
                 obj.runs = cell(0);
                 return;
@@ -82,6 +107,7 @@ classdef NiftiFS < handle
             obj.runs = unique(obj.get_files(obj.path_to_runs));
         end
         function set_groups(obj)
+            % see set_subjects
            if(~obj.group_strmatch)
               obj.groups = cell(0); 
            end
@@ -90,25 +116,32 @@ classdef NiftiFS < handle
            obj.groups = unique(obj.get_files(path_to_groups));
         end
         function set_is_nii(obj, flag)
+            % if >0 then scans are in .nii format, else, in analyze format
             obj.is_nii = flag;
         end
         
         %% Get properties
         function scans = get_functional_scans(obj)
+            % gets all functional scans for all subjects, runs and groups.
+            % This can be a bit time consuming if you have a lot of
+            % subjects
             scans = expand_folders(obj, strsplit(obj.functional_dirstruct, filesep));
         end
         function scans = get_structural_scans(obj)
+            % gets all structural scans for all subjects
             scans = expand_folders(obj, strsplit(obj.structural_dirstruct, filesep));
         end
         
         function subject_struct = get_subj_scans(obj)
+            % gets scans but structured by subject -> scans, and
+            % subject->runs->scans
            if(isempty(obj.subjects))
               error('no subjects');
            end
            scans = strrep(get_functional_scans(obj), obj.top_level, '');
            path = strrep(obj.path_to_subjects, obj.top_level, '');
            subject_struct = struct('name', {}, 'subject_scans', {}, 'subject_runs', {});
-           for i=1:size(path, 1);
+           for i=1:size(path, 1)
                subject_struct(i).name = path{i, 1};
                subject_struct(i).subject_scans = scans(~cellfun(@isempty, strfind(scans, path{i,1})));
                if ~isempty(any(~cellfun(@isempty, strfind(obj.path_to_runs, path{i, 1}))))
@@ -127,18 +160,26 @@ classdef NiftiFS < handle
         
         %% Clear properties
         function clear_subjects(obj)
+            % clears the subject variables
             obj.path_to_subjects = {};
             obj.subjects = {};
             
         end
         function clear_runs(obj)
+            % clears the run variables
             obj.path_to_runs = {};
             obj.runs = {};
         end
-        
+        function clear_groups(obj)
+            % clears the group variables
+            obj.groups = {};
+        end
         %% Methods
         function filepath = expand_folders(obj, cellpath)
-
+            % takes a dirstruct split by folder and returns the list of
+            % directories at the end. Expands based on strmatches and
+            % wildcard(*) selections
+            
             filepath = cell([0, 1]);
             for i = 1:size(cellpath, 2)
                 only_dir = i ~= size(cellpath,2);
@@ -156,6 +197,8 @@ classdef NiftiFS < handle
             end
         end
         function files = get_files(~, full_files)
+            % given a cell list of filepaths gets the last entry, could be
+            % renamed
             files = cell(size(full_files,1),1);
             for i = 1:size(full_files,1)
                 split = strsplit(full_files{i}, filesep);
@@ -163,6 +206,11 @@ classdef NiftiFS < handle
             end
         end
         function filecell = cartesian(~, filepath, entry, only_dir)
+            % named as such because it gets the cartesian product between
+            % the filepath and the values returned by entry. filepath is a
+            % cell list of paths, entry is the name of a folder, file, or
+            % wildcard, and only_dir is a flag which if set filters out
+            % non-directory entries. Could be renamed. 
             filecell = cell(0,1);
             if size(filepath,1)==0
                 filecell = entry;
@@ -195,6 +243,7 @@ classdef NiftiFS < handle
             end
         end
         function entry = replace_entry(obj,entry)
+            % replaces the value in a path with an appropriate matcher 
             switch lower(entry)
                 case '{top_level}'
                     entry =  {obj.top_level};
@@ -207,9 +256,9 @@ classdef NiftiFS < handle
                 case '{structs}'
                     entry = {obj.structural_strmatch};
                 case '{scans}'
-                    if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img'));
+                    if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img'))
                         entry = {[obj.scan_strmatch '.img']};
-                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii'));
+                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii'))
                         entry = {[obj.scan_strmatch '.nii']};
                     else 
                         entry = {obj.scan_strmatch};
@@ -219,30 +268,54 @@ classdef NiftiFS < handle
             end
         end
         function remove_runs(obj, pattern)
+            % removes all runs that match a string, pattern. eg.
+            % (remove_runs(obj, 'run01');
             obj.path_to_runs = ...
                 obj.path_to_runs(find(cellfun(@isempty, strfind(obj.path_to_runs, pattern))));
             obj.runs = obj.runs(find(cellfun(@isempty, strfind(obj.runs, pattern))));
         end
         function remove_subjs(obj, pattern)
+            % removes all subjects that match a string, pattern. eg.
+            % (remove_subjs(obj, 's01'))
             obj.path_to_subjects = ...
                 obj.path_to_subjects(find(cellfun(@isempty, strfind(obj.path_to_subjects, pattern))));
             obj.subjects = obj.subjects(find(cellfun(@isempty, strfind(obj.subjects, pattern))));
         end
         function rm(obj, patterns)
+            % takes a cell list of patterns, and removes each one. eg.
+            % (rm(obj, {'run01';'s01'}))
             for i = 1:size(patterns)
                 remove_runs(obj, patterns{i});
                 remove_subjs(obj, patterns{i});
             end
         end
         function counts = count_runs(obj)
+            % if subjects contain runs, counts the number of runs for a
+            % given subject
+            
             counts = cellfun(@(x) sum(~cellfun('isempty', strfind(obj.path_to_runs,x))),obj.subjects);
             counts = [obj.subjects num2cell(counts)];
             
         end
         
         %% Functional Methods
-        function ret = feval_cell(~, func, cell_list)
-            
+        
+        
+        % functional methods are just little layers that run functions on
+        % cell lists easily. For more complicated processing, it is
+        % recommended to manually build a pipeline. 
+        (
+        
+        %They're roughly divided into: 
+        % 1. each cell evaluators (parfeval_cell, parfor_cell) which take
+        % the form parfeval_cell(obj, @spm_vol, cell_list_path_to_scans);
+        % this type of function reads the header for each scan
+        
+        % 2. batch cell evaluators (batch_parfor, batch_serial,
+        % batch_parfeval)
+        %eg. (batch_parfor(obj, @spm_reslice, cell_list_path_to_scans)
+        function ret = parfeval_cell(~, func, cell_list)
+
            for i = 1:size(cell_list, 1)
               f(i) = parfeval(gcp(), func, 1, cell_list{i});
            end
