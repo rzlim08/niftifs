@@ -304,7 +304,7 @@
         % functional methods are just little layers that run functions on
         % cell lists easily. For more complicated processing, it is
         % recommended to manually build a pipeline. 
-        (
+        
         
         %They're roughly divided into: 
         % 1. each cell evaluators (parfeval_cell, parfor_cell) which take
