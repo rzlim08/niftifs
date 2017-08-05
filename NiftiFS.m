@@ -138,7 +138,7 @@
            if(isempty(obj.subjects))
               error('no subjects');
            end
-           scans = strrep(get_functional_scans(obj), obj.top_level, '');
+           scans = get_functional_scans(obj);
            path = strrep(obj.path_to_subjects, obj.top_level, '');
            subject_struct = struct('name', {}, 'subject_scans', {}, 'subject_runs', {});
            for i=1:size(path, 1)
@@ -304,7 +304,7 @@
         % functional methods are just little layers that run functions on
         % cell lists easily. For more complicated processing, it is
         % recommended to manually build a pipeline. 
-        (
+        
         
         %They're roughly divided into: 
         % 1. each cell evaluators (parfeval_cell, parfor_cell) which take
@@ -327,14 +327,18 @@
         end
         
         function ret = parfor_cell(~, func, cell_list)
-            
+
            parfor i = 1:size(cell_list, 1)
-              ret{i} = feval(func, cell_list{i});
+              if(nargout(func) ==0)
+                  feval(func, cell_list{i});
+              else
+                  ret{i} = feval(func, cell_list{i});
+              end
            end
 
         end
         function ret = batch_parfor(obj,  func, cell_list)
-           tl =  obj.top_level;
+           tl =  '';
            parfor i = 1:size(cell_list, 1)
               cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
               if(nargout(func) ==0)
@@ -345,7 +349,7 @@
            end
         end
         function ret = batch_serial(obj,  func, cell_list)
-           tl =  obj.top_level;
+           tl =  '';
            for i = 1:size(cell_list, 1)
               cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
               if(nargout(func) ==0)
@@ -356,7 +360,7 @@
            end
         end
         function ret = batch_parfeval(obj,  func, cell_list)
-           tl =  obj.top_level;
+           tl =  '';
            for i = 1:size(cell_list, 1)
               cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
               f(i) = parfeval(gcp(), func, 1, char(cl));
