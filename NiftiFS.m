@@ -13,6 +13,8 @@
         runs
         groups
         top_level
+        functional_scans
+        structural_scans
         is_nii = 0
         art_slice_prefix = 'g'
         art_slice = 0
@@ -66,7 +68,6 @@
                 obj.structural_dirstruct = dirstruct;
             end
         end
-        
         function set_subject_strmatch(obj, strmatch)
             % sets a string to match for the subject (eg. 'WM*' for WM001, 
             % WM002, etc), can be left as * if all folders in the level are
@@ -120,25 +121,35 @@
             obj.is_nii = flag;
         end
         
+        function reset_scan_strmatch(obj, strmatch)
+           obj.set_scan_strmatch(strmatch);
+           obj.get_functional_scans;
+        end
+        
         %% Get properties
         function scans = get_functional_scans(obj)
             % gets all functional scans for all subjects, runs and groups.
             % This can be a bit time consuming if you have a lot of
             % subjects
             scans = expand_folders(obj, strsplit(obj.functional_dirstruct, filesep));
+            obj.functional_scans = scans;
         end
         function scans = get_structural_scans(obj)
             % gets all structural scans for all subjects
             scans = expand_folders(obj, strsplit(obj.structural_dirstruct, filesep));
+            obj.structural_scans = scans;
         end
-        
         function subject_struct = get_subj_scans(obj)
             % gets scans but structured by subject -> scans, and
             % subject->runs->scans
            if(isempty(obj.subjects))
               error('no subjects');
            end
-           scans = get_functional_scans(obj);
+           if(isempty(obj.functional_scans))
+             scans = get_functional_scans(obj);
+           else
+             scans = obj.functional_scans;
+           end
            path = strrep(obj.path_to_subjects, obj.top_level, '');
            subject_struct = struct('name', {}, 'subject_scans', {}, 'subject_runs', {});
            for i=1:size(path, 1)
@@ -154,6 +165,11 @@
                    subject_struct(i).subject_runs = subj_runs;
                end
            end
+        end
+        function subject_struct = get_random_subj(obj, number)
+           subject_struct = get_subj_scans(obj);
+           vec = randperm(size(subject_struct,2), number);
+           subject_struct = subject_struct(1, vec);
         end
         
         
@@ -253,7 +269,9 @@
                     entry = {obj.run_strmatch};
                 case '{groups}'
                     entry = {obj.group_strmatch};
-                case '{structs}'
+                case '{structs}' 
+                    entry = {obj.structural_strmatch};
+                case '{structurals}'
                     entry = {obj.structural_strmatch};
                 case '{scans}'
                     if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img'))
@@ -297,7 +315,11 @@
             counts = [obj.subjects num2cell(counts)];
             
         end
-        
+        function saveas(obj, filename)
+           n = inputname(1);
+           eval([n '= obj']);
+           save([pwd filesep filename '.mat'], n); 
+        end
         %% Functional Methods
         
         
@@ -325,7 +347,7 @@
              ret{completedIdx} = value;
            end
         end
-        
+       
         function ret = parfor_cell(~, func, cell_list)
 
            parfor i = 1:size(cell_list, 1)
