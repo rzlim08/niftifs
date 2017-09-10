@@ -93,7 +93,7 @@
         function set_subjects(obj)
             % sets the 'subjects' variable to the folders that match the
             % subject_strmatch in the position as given by the dirstruct
-            ndir = strsplit(obj.functional_dirstruct, '/{subjects}/');
+            ndir = strsplit(obj.functional_dirstruct, [filesep '{subjects}' filesep]);
             obj.path_to_subjects = expand_folders(obj, [strsplit(ndir{1}, filesep) '{subjects}']);
             obj.subjects = unique(obj.get_files(obj.path_to_subjects));
         end
@@ -103,7 +103,7 @@
                 obj.runs = cell(0);
                 return;
             end
-            ndir = strsplit(obj.functional_dirstruct, '/{runs}/');
+            ndir = strsplit(obj.functional_dirstruct, [filesep '{runs}' filesep]);
             obj.path_to_runs = expand_folders(obj, [strsplit(ndir{1}, filesep) '{runs}']);
             obj.runs = unique(obj.get_files(obj.path_to_runs));
         end
@@ -112,7 +112,7 @@
            if(~obj.group_strmatch)
               obj.groups = cell(0); 
            end
-           ndir = strsplit(obj.functional_dirstruct, '/{groups}/');
+           ndir = strsplit(obj.functional_dirstruct, [filesep '{groups}' filesep]);
            path_to_groups = expand_folders(obj, [strsplit(ndir{1}, filesep) '{groups}']);
            obj.groups = unique(obj.get_files(path_to_groups));
         end
@@ -317,7 +317,7 @@
         end
         function saveas(obj, filename)
            n = inputname(1);
-           eval([n '= obj']);
+           eval([n '= obj;']);
            save([pwd filesep filename '.mat'], n); 
         end
         %% Functional Methods
