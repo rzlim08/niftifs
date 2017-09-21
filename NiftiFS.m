@@ -14,6 +14,7 @@
         groups
         top_level
         functional_scans
+        old_functionals = {};
         structural_scans
         is_nii = 0
         art_slice_prefix = 'g'
@@ -24,7 +25,10 @@
         normalization = 0
         smoothing_prefix = 's'
         smoothing = 0
-        
+        unwarping_prefix = 'u'
+        unwarping = 0
+        realignment_prefix = 'r'
+        realignment = 0
     end
     methods
         
@@ -120,8 +124,9 @@
             % if >0 then scans are in .nii format, else, in analyze format
             obj.is_nii = flag;
         end
-        
         function reset_scan_strmatch(obj, strmatch)
+           obj.old_functionals{end+1, 2} = obj.functional_scans;
+           obj.old_functionals{end, 1} = obj.scan_strmatch;
            obj.set_scan_strmatch(strmatch);
            obj.get_functional_scans;
         end
@@ -162,9 +167,11 @@
                    for j = 1:size(subj_runs)
                        subj_runs{j, 2} = scans(~cellfun(@isempty, strfind(scans, subj_runs{j,1})));
                    end
-                   subject_struct(i).subject_runs = subj_runs;
+                   
+                   subject_struct(i).subject_runs =subj_runs(~cellfun(@isempty, subj_runs(:,2)), :);
                end
            end
+           subject_struct = subject_struct';
         end
         function subject_struct = get_random_subj(obj, number)
            subject_struct = get_subj_scans(obj);
@@ -190,6 +197,7 @@
             % clears the group variables
             obj.groups = {};
         end
+        
         %% Methods
         function filepath = expand_folders(obj, cellpath)
             % takes a dirstruct split by folder and returns the list of
@@ -274,9 +282,9 @@
                 case '{structurals}'
                     entry = {obj.structural_strmatch};
                 case '{scans}'
-                    if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img'))
+                    if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img')) && isempty(strfind(obj.scan_strmatch, '.nii'))
                         entry = {[obj.scan_strmatch '.img']};
-                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii'))
+                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii')) && isempty(strfind(obj.scan_strmatch, '.img'))
                         entry = {[obj.scan_strmatch '.nii']};
                     else 
                         entry = {obj.scan_strmatch};
@@ -315,14 +323,40 @@
             counts = [obj.subjects num2cell(counts)];
             
         end
+        function ran_art_slice(obj)
+           obj.art_slice = 1;
+           obj.reset_scan_strmatch([obj.art_slice_prefix obj.scan_strmatch]);
+        end
+        function ran_slice_timing(obj)
+           obj.slice_timing = 1;
+           obj.reset_scan_strmatch([obj.slice_timing_prefix obj.scan_strmatch]);
+        end
+        function ran_normalization(obj)
+           obj.normalization = 1;
+           obj.reset_scan_strmatch([obj.normalization_prefix obj.scan_strmatch]);
+        end
+        function ran_smoothing(obj)
+           obj.smoothing = 1;
+           obj.reset_scan_strmatch([obj.smoothing_prefix obj.scan_strmatch]);
+        end
+        function ran_unwarping(obj)
+           obj.unwarping = 1;
+           obj.reset_scan_strmatch([obj.unwarping_prefix obj.scan_strmatch]);
+        end
+        function undo(obj, num)
+           if nargin<2
+               num = 1;
+           end
+           obj.functional_scans = obj.old_functionals{(end+1)-num, 2};
+           obj.set_scan_strmatch(obj.old_functionals{(end+1)-num, 1});
+           obj.old_functionals = obj.old_functionals(1:(end)-num, :);
+        end
         function saveas(obj, filename)
            n = inputname(1);
            eval([n '= obj;']);
            save([pwd filesep filename '.mat'], n); 
         end
-        %% Functional Methods
-        
-        
+        %% Functional Methods     
         % functional methods are just little layers that run functions on
         % cell lists easily. For more complicated processing, it is
         % recommended to manually build a pipeline. 
