@@ -118,25 +118,41 @@ classdef PreProcessing < handle
                     matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
             end
         end
-        function run_slice_timing(obj, matlabbatch, TR, number_slices, ref_slice, subjects)
+        function vec = get_slice_vector(~, number_slices, ascending, interleaved)
+            if ~interleaved
+                if ascending
+                    vec = 1:1:number_slices;
+                elseif ~ascending 
+                    vec = number_slices:-1:1; 
+                end
+            else
+                if ascending && mod(number_slices,2)~=0
+                    vec = [1:2:number_slices 2:2:number_slices-1];
+                elseif ascending && mod(number_slices,2)==0
+                    vec = [1:2:number_slices-1 2:2:number_slices];
+                elseif ~ascending && mod(number_slices,2)~=0
+                    vec = [number_slices:-2:1 number_slices-1:-2:2];
+                elseif ~ascending && mod(number_slices,2)==0
+                    vec = [number_slices:-2:2 number_slices-1:-2:1];
+                end
+                
+            end
+                
+        
+        end
+        function run_slice_timing(obj, matlabbatch, TR, slice_order, ref_slice, subjects)
             if nargin < 6
                 subjects = get_subj_scans(obj.niftifs);
             end
-            setpath(obj);
-            
-            TA = TR-(TR/number_slices);
-            if mod(number_slices,2)~=0
-                slice_order = [1:2:number_slices 2:2:number_slices-1];
-            else
-                slice_order = [1:2:number_slices-1 2:2:number_slices];
-            end
+            number_slices = max(slice_order);
+            TA = TR-(TR/number_slices);         
             matlabbatch{1}.spm.temporal.st.scans = {}; % image list
             matlabbatch{1}.spm.temporal.st.nslices = number_slices; % number of slices
             matlabbatch{1}.spm.temporal.st.tr = TR; % TR
             matlabbatch{1}.spm.temporal.st.ta = TA; % TA
             matlabbatch{1}.spm.temporal.st.so = slice_order; % scan order
             matlabbatch{1}.spm.temporal.st.refslice = ref_slice;
-            spm_jobman('initcfg');
+            initialize_spm(obj);
             for i=1:size(subjects, 1)
                 for j =1:size(subjects(i).subject_runs, 1)
                     matlabbatch{1}.spm.temporal.st.scans = {subjects(i).subject_runs{j, 2}};
@@ -144,25 +160,40 @@ classdef PreProcessing < handle
                 end
             end
         end
+        function dir = initialize_spm(obj, task)
+            if nargin < 2
+               task = ''; 
+            end
+            dir = pwd;   
+            setpath(obj);
+            spm_jobman('initcfg');
+            if strcmp(task, 'realign') || strcmp(task,'coregistration')
+                cd(obj.output_dir);
+                spm('FnUIsetup','realign' ,1,1);
+            end
+        end
         function run_realignment(obj, matlabbatch, subjects)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
-            setpath(obj);
-            spm_jobman('initcfg');
+            current_dir = initialize_spm('realign');         
             for i = 1:size(subjects, 1)
                 for j = 1:size(subjects(i).subject_runs, 1)
                     matlabbatch{1}.spm.spatial.realign.estwrite.data = {subjects(i).subject_runs{j, 2}};
                     spm_jobman('run', matlabbatch);
                 end
             end
+            psfile = dir([pwd filesep 'spm_*20*.ps']);
+            if size(psfile,1) ==1
+                movefile(psfile.name, ['realignment_' date '.ps']);
+            end
+            cd(current_dir);
         end
         function run_realignment_unwarp(obj, matlabbatch, PM_files, subjects)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
-            setpath(obj);
-            spm_jobman('initcfg');
+            current_dir = initialize_spm(obj, 'realign');
             for i = 1:size(subjects, 1)
                 PM_file = PM_files(i);
                 for j = 1:size(subjects(i).subject_runs, 1)
@@ -171,17 +202,16 @@ classdef PreProcessing < handle
                     spm_jobman('run', matlabbatch);
                 end
             end
-            
+            cd(current_dir);
         end
         function run_coregistration(obj, matlabbatch, subjects)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
-            setpath(obj);
-            spm_jobman('initcfg');
+            current_dir = initialize_spm(obj, 'coregistration');
             structurals = get_structural_scans(obj.niftifs);
             
-            for i = 1:size(subjects,1) 
+            for i = 1:size(subjects,1)
                 structural_scan = structurals(~cellfun(@isempty, strfind(structurals, subjects(i).name)));
                 for j = 1:size(subjects(i).subject_runs, 1)
                     scan_folder = fileparts(subjects(i).subject_runs{j,2}{1,1});
@@ -189,8 +219,8 @@ classdef PreProcessing < handle
                     a = 2;
                     % If mean image is not matched
                     while isempty(mean_image) && obj.niftifs.scan_strmatch(a) ~= '*'
-                      mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch(a:end)]]);                       
-                      a = a+1;
+                        mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch(a:end)]]);
+                        a = a+1;
                     end
                     mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch(a:end)]]);
                     matlabbatch{1}.spm.spatial.coreg.estimate.ref = structural_scan; % T1 image path
@@ -199,18 +229,16 @@ classdef PreProcessing < handle
                     spm_jobman('run', matlabbatch);
                 end
             end
-            
+            cd(current_dir);
         end
         function run_normalization(obj, matlabbatch, subjects)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
-            setpath(obj);
-            spm_jobman('initcfg');
+            initialize_spm(obj)
             structurals = get_structural_scans(obj.niftifs);
             if size(structurals, 1) ~= size(subjects,1)
                 warning('There is not a single structural scan per member');
-                
             end
             for i = 1:size(subjects, 1)
                 structural_scan = structurals(~cellfun(@isempty, strfind(structurals, subjects(i).name)));
@@ -224,12 +252,12 @@ classdef PreProcessing < handle
                 end
             end
         end
+        
         function run_smoothing(obj, matlabbatch, subjects)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
-            setpath(obj);
-            spm_jobman('initcfg');
+            initialize_spm(obj);
             for i = 1:size(subjects, 1)
                 for j = 1:size(subjects(i).subject_runs, 1)
                     matlabbatch{1}.spm.spatial.smooth.data = subjects(i).subject_runs{j, 2};

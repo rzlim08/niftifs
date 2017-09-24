@@ -167,16 +167,17 @@
                    for j = 1:size(subj_runs)
                        subj_runs{j, 2} = scans(~cellfun(@isempty, strfind(scans, subj_runs{j,1})));
                    end
-                   
-                   subject_struct(i).subject_runs =subj_runs(~cellfun(@isempty, subj_runs(:,2)), :);
+                   if size(subj_runs)>0
+                    subject_struct(i).subject_runs =subj_runs(~cellfun(@isempty, subj_runs(:,2)), :);
+                   end
                end
            end
            subject_struct = subject_struct';
         end
         function subject_struct = get_random_subj(obj, number)
            subject_struct = get_subj_scans(obj);
-           vec = randperm(size(subject_struct,2), number);
-           subject_struct = subject_struct(1, vec);
+           vec = randperm(size(subject_struct,1), number);
+           subject_struct = subject_struct(vec);
         end
         
         
@@ -228,6 +229,33 @@
                 split = strsplit(full_files{i}, filesep);
                 files{i} = split{end};
             end
+        end
+        function new_obj = move_functionals(obj, new_dir, subjs)
+            if ~exist(new_dir, 'dir')
+                error('directory does not exist');
+            end
+           tl = obj.top_level;
+           for i = 1:size(subjs)
+              
+              for k= 1:size(subjs(i).subject_scans)
+                  new_path = strrep(subjs(i).subject_scans{k}, tl, new_dir);
+                  new_folder = fileparts(new_path);
+                  if ~exist(new_folder, 'dir')
+                     mkdir(new_folder); 
+                  end
+                  copyfile(subjs(i).subject_scans{k}, new_path);
+              end
+           end
+           %% redo with deep copy
+           new_niftifs = obj;
+           new_niftifs.top_level = new_dir;
+           new_niftifs.clear_subjects;
+           new_niftifs.clear_runs;
+           new_niftifs.set_subjects;
+           new_niftifs.set_runs;
+           new_niftifs.get_functional_scans;
+           new_niftifs.set_structural_dirstruct(strrep(obj.structural_dirstruct, '{top_level}', tl));
+           new_obj = new_niftifs;
         end
         function filecell = cartesian(~, filepath, entry, only_dir)
             % named as such because it gets the cartesian product between
