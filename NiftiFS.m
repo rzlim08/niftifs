@@ -1,4 +1,4 @@
- classdef NiftiFS < handle
+classdef NiftiFS < handle
     properties ( SetAccess = private)
         functional_dirstruct = ''
         structural_dirstruct = ''
@@ -38,19 +38,20 @@
         % Structural scans are able to exist in a separate folder
         function obj = NiftiFS(top_level_dir)
             if nargin ~= 1
-                error('A NiftiFS must take as a parameter, a top level directory which contains all Functional scans');
+                error(['A NiftiFS must take as a parameter, a top level directory' ...
+                'which contains all Functional scans']);
             end
             obj.top_level = top_level_dir;
         end
         
         %% Set properties
-       
+        
         function set_functional_dirstruct(obj,dirstruct)
             % takes a string that describes the directory structure to the
             % functional scans. A directory structure consists of a file
             % path string, with special folders (eg. subjects, runs) in
             % curly braces eg. {subjects}. Each dirstruct must start with
-            % {top_level}. 
+            % {top_level}.
             if nargin <2
                 obj.functional_dirstruct = '{top_level}/{subjects}/{scans}';
                 warning('no dirstruct given, default= {top_level}/{subjects}/{scans}');
@@ -73,7 +74,7 @@
             end
         end
         function set_subject_strmatch(obj, strmatch)
-            % sets a string to match for the subject (eg. 'WM*' for WM001, 
+            % sets a string to match for the subject (eg. 'WM*' for WM001,
             % WM002, etc), can be left as * if all folders in the level are
             % subjects
             obj.subject_strmatch = strmatch;
@@ -88,11 +89,11 @@
         end
         function set_group_strmatch(obj, strmatch)
             % see subject strmatch
-           obj.group_strmatch = strmatch; 
+            obj.group_strmatch = strmatch;
         end
         function set_structural_strmatch(obj, strmatch)
             % see subject strmatch
-            obj.structural_strmatch = strmatch; 
+            obj.structural_strmatch = strmatch;
         end
         function set_subjects(obj)
             % sets the 'subjects' variable to the folders that match the
@@ -113,23 +114,32 @@
         end
         function set_groups(obj)
             % see set_subjects
-           if(~obj.group_strmatch)
-              obj.groups = cell(0); 
-           end
-           ndir = strsplit(obj.functional_dirstruct, [filesep '{groups}' filesep]);
-           path_to_groups = expand_folders(obj, [strsplit(ndir{1}, filesep) '{groups}']);
-           obj.groups = unique(obj.get_files(path_to_groups));
+            if(~obj.group_strmatch)
+                obj.groups = cell(0);
+            end
+            ndir = strsplit(obj.functional_dirstruct, [filesep '{groups}' filesep]);
+            path_to_groups = expand_folders(obj, [strsplit(ndir{1}, filesep) '{groups}']);
+            obj.groups = unique(obj.get_files(path_to_groups));
         end
         function set_is_nii(obj, flag)
             % if >0 then scans are in .nii format, else, in analyze format
             obj.is_nii = flag;
         end
         function reset_scan_strmatch(obj, strmatch)
-           obj.old_functionals{end+1, 2} = obj.functional_scans;
-           obj.old_functionals{end, 1} = obj.scan_strmatch;
-           obj.set_scan_strmatch(strmatch);
-           obj.get_functional_scans;
+            % reset the scan_strmatch parameter and reruns
+            % set_functional_scans.
+            obj.old_functionals{end+1, 2} = obj.functional_scans;
+            obj.old_functionals{end, 1} = obj.scan_strmatch;
+            obj.set_scan_strmatch(strmatch);
+            obj.set_functional_scans;
         end
+        function set_functional_scans(obj)
+            % sets all functional scans for all subjects, runs and groups.
+            % This can be a bit time consuming if you have a lot of
+            % subjects
+            obj.functional_scans = expand_folders(obj, strsplit(obj.functional_dirstruct, filesep));
+        end
+
         
         %% Get properties
         function scans = get_functional_scans(obj)
@@ -147,37 +157,38 @@
         function subject_struct = get_subj_scans(obj)
             % gets scans but structured by subject -> scans, and
             % subject->runs->scans
-           if(isempty(obj.subjects))
-              error('no subjects');
-           end
-           if(isempty(obj.functional_scans))
-             scans = get_functional_scans(obj);
-           else
-             scans = obj.functional_scans;
-           end
-           path = strrep(obj.path_to_subjects, obj.top_level, '');
-           subject_struct = struct('name', {}, 'subject_scans', {}, 'subject_runs', {});
-           for i=1:size(path, 1)
-               subject_struct(i).name = path{i, 1};
-               subject_struct(i).subject_scans = scans(~cellfun(@isempty, strfind(scans, path{i,1})));
-               if ~isempty(any(~cellfun(@isempty, strfind(obj.path_to_runs, path{i, 1}))))
-                   subj_runs = strrep(obj.path_to_runs(~cellfun(@isempty, ...
-                       strfind(obj.path_to_runs, path{i, 1}))), ...
-                       obj.top_level, '');
-                   for j = 1:size(subj_runs)
-                       subj_runs{j, 2} = scans(~cellfun(@isempty, strfind(scans, subj_runs{j,1})));
-                   end
-                   if size(subj_runs)>0
-                    subject_struct(i).subject_runs =subj_runs(~cellfun(@isempty, subj_runs(:,2)), :);
-                   end
-               end
-           end
-           subject_struct = subject_struct';
+            if(isempty(obj.subjects))
+                error('no subjects');
+            end
+            if(isempty(obj.functional_scans))
+                scans = get_functional_scans(obj);
+            else
+                scans = obj.functional_scans;
+            end
+            path = strrep(obj.path_to_subjects, obj.top_level, '');
+            subject_struct = struct('name', {}, 'subject_scans', {}, 'subject_runs', {});
+            for i=1:size(path, 1)
+                subject_struct(i).name = path{i, 1};
+                subject_struct(i).subject_scans = scans(~cellfun(@isempty, strfind(scans, path{i,1})));
+                if ~isempty(any(~cellfun(@isempty, strfind(obj.path_to_runs, path{i, 1}))))
+                    subj_runs = strrep(obj.path_to_runs(~cellfun(@isempty, ...
+                        strfind(obj.path_to_runs, path{i, 1}))), ...
+                        obj.top_level, '');
+                    for j = 1:size(subj_runs)
+                        subj_runs{j, 2} = scans(~cellfun(@isempty, strfind(scans, subj_runs{j,1})));
+                    end
+                    if size(subj_runs)>0
+                        subject_struct(i).subject_runs =subj_runs(~cellfun(@isempty, subj_runs(:,2)), :);
+                    end
+                end
+            end
+            subject_struct = subject_struct';
         end
         function subject_struct = get_random_subj(obj, number)
-           subject_struct = get_subj_scans(obj);
-           vec = randperm(size(subject_struct,1), number);
-           subject_struct = subject_struct(vec);
+            % returns a subject struct of size number. Basically used for testing purposes.   
+            subject_struct = get_subj_scans(obj);
+            vec = randperm(size(subject_struct,1), number);
+            subject_struct = subject_struct(vec);
         end
         
         
@@ -231,38 +242,40 @@
             end
         end
         function new_obj = move_functionals(obj, new_dir, subjs)
+            % moves functional scans to a new directory specified by
+            % new_dir
             if ~exist(new_dir, 'dir')
                 error('directory does not exist');
             end
-           tl = obj.top_level;
-           for i = 1:size(subjs)
-              
-              for k= 1:size(subjs(i).subject_scans)
-                  new_path = strrep(subjs(i).subject_scans{k}, tl, new_dir);
-                  new_folder = fileparts(new_path);
-                  if ~exist(new_folder, 'dir')
-                     mkdir(new_folder); 
-                  end
-                  copyfile(subjs(i).subject_scans{k}, new_path);
-              end
-           end
-           %% redo with deep copy
-           new_niftifs = obj;
-           new_niftifs.top_level = new_dir;
-           new_niftifs.clear_subjects;
-           new_niftifs.clear_runs;
-           new_niftifs.set_subjects;
-           new_niftifs.set_runs;
-           new_niftifs.get_functional_scans;
-           new_niftifs.set_structural_dirstruct(strrep(obj.structural_dirstruct, '{top_level}', tl));
-           new_obj = new_niftifs;
+            tl = obj.top_level;
+            for i = 1:size(subjs)
+                
+                for k= 1:size(subjs(i).subject_scans)
+                    new_path = strrep(subjs(i).subject_scans{k}, tl, new_dir);
+                    new_folder = fileparts(new_path);
+                    if ~exist(new_folder, 'dir')
+                        mkdir(new_folder);
+                    end
+                    copyfile(subjs(i).subject_scans{k}, new_path);
+                end
+            end
+            %% redo with deep copy
+            new_niftifs = obj;
+            new_niftifs.top_level = new_dir;
+            new_niftifs.clear_subjects;
+            new_niftifs.clear_runs;
+            new_niftifs.set_subjects;
+            new_niftifs.set_runs;
+            new_niftifs.get_functional_scans;
+            new_niftifs.set_structural_dirstruct(strrep(obj.structural_dirstruct, '{top_level}', tl));
+            new_obj = new_niftifs;
         end
         function filecell = cartesian(~, filepath, entry, only_dir)
             % named as such because it gets the cartesian product between
             % the filepath and the values returned by entry. filepath is a
             % cell list of paths, entry is the name of a folder, file, or
             % wildcard, and only_dir is a flag which if set filters out
-            % non-directory entries. Could be renamed. 
+            % non-directory entries. Could be renamed.
             filecell = cell(0,1);
             if size(filepath,1)==0
                 filecell = entry;
@@ -295,7 +308,7 @@
             end
         end
         function entry = replace_entry(obj,entry)
-            % replaces the value in a path with an appropriate matcher 
+            % replaces the value in a path with an appropriate matcher
             switch lower(entry)
                 case '{top_level}'
                     entry =  {obj.top_level};
@@ -305,16 +318,18 @@
                     entry = {obj.run_strmatch};
                 case '{groups}'
                     entry = {obj.group_strmatch};
-                case '{structs}' 
+                case '{structs}'
                     entry = {obj.structural_strmatch};
                 case '{structurals}'
                     entry = {obj.structural_strmatch};
                 case '{scans}'
-                    if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img')) && isempty(strfind(obj.scan_strmatch, '.nii'))
+                    if ~obj.is_nii && isempty(strfind(obj.scan_strmatch, '.img')) ...
+                            && isempty(strfind(obj.scan_strmatch, '.nii'))
                         entry = {[obj.scan_strmatch '.img']};
-                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii')) && isempty(strfind(obj.scan_strmatch, '.img'))
+                    elseif obj.is_nii && isempty(strfind(obj.scan_strmatch, '.nii')) ...
+                            && isempty(strfind(obj.scan_strmatch, '.img'))
                         entry = {[obj.scan_strmatch '.nii']};
-                    else 
+                    else
                         entry = {obj.scan_strmatch};
                     end
                 otherwise
@@ -352,45 +367,57 @@
             
         end
         function ran_art_slice(obj)
-           obj.art_slice = 1;
-           obj.reset_scan_strmatch([obj.art_slice_prefix obj.scan_strmatch]);
+            % flag to show that art_slice has been run. Also resets the
+            % scan_strmatch to add the prefix
+            obj.art_slice = 1;
+            obj.reset_scan_strmatch([obj.art_slice_prefix obj.scan_strmatch]);
         end
         function ran_slice_timing(obj)
-           obj.slice_timing = 1;
-           obj.reset_scan_strmatch([obj.slice_timing_prefix obj.scan_strmatch]);
+            % flag to show that slice_timing has been run. Also resets the
+            % scan_strmatch to add the prefix 
+            obj.slice_timing = 1;
+            obj.reset_scan_strmatch([obj.slice_timing_prefix obj.scan_strmatch]);
         end
         function ran_normalization(obj)
-           obj.normalization = 1;
-           obj.reset_scan_strmatch([obj.normalization_prefix obj.scan_strmatch]);
+            % flag to show that normalizing has been run. Also resets the
+            % scan_strmatch to add the prefix            
+            obj.normalization = 1;
+            obj.reset_scan_strmatch([obj.normalization_prefix obj.scan_strmatch]);
         end
         function ran_smoothing(obj)
-           obj.smoothing = 1;
-           obj.reset_scan_strmatch([obj.smoothing_prefix obj.scan_strmatch]);
+            % flag to show that smoothing has been run. Also resets the
+            % scan_strmatch to add the prefix            
+            obj.smoothing = 1;
+            obj.reset_scan_strmatch([obj.smoothing_prefix obj.scan_strmatch]);
         end
         function ran_unwarping(obj)
-           obj.unwarping = 1;
-           obj.reset_scan_strmatch([obj.unwarping_prefix obj.scan_strmatch]);
+            % flag to show that unwarping has been run. Also resets the
+            % scan_strmatch to add the prefix    
+            obj.unwarping = 1;
+            obj.reset_scan_strmatch([obj.unwarping_prefix obj.scan_strmatch]);
         end
         function undo(obj, num)
-           if nargin<2
-               num = 1;
-           end
-           obj.functional_scans = obj.old_functionals{(end+1)-num, 2};
-           obj.set_scan_strmatch(obj.old_functionals{(end+1)-num, 1});
-           obj.old_functionals = obj.old_functionals(1:(end)-num, :);
+            % undo the last change to the functional scans. 
+            if nargin<2
+                num = 1;
+            end
+            obj.functional_scans = obj.old_functionals{(end+1)-num, 2};
+            obj.set_scan_strmatch(obj.old_functionals{(end+1)-num, 1});
+            obj.old_functionals = obj.old_functionals(1:(end)-num, :);
         end
         function saveas(obj, filename)
-           n = inputname(1);
-           eval([n '= obj;']);
-           save([pwd filesep filename '.mat'], n); 
+            % save the NiftiFS file 
+            n = inputname(1);
+            eval([n '= obj;']);
+            save([pwd filesep filename '.mat'], n);
         end
-        %% Functional Methods     
+        %% Functional Methods
         % functional methods are just little layers that run functions on
         % cell lists easily. For more complicated processing, it is
-        % recommended to manually build a pipeline. 
+        % recommended to manually build a pipeline.
         
         
-        %They're roughly divided into: 
+        %They're roughly divided into:
         % 1. each cell evaluators (parfeval_cell, parfor_cell) which take
         % the form parfeval_cell(obj, @spm_vol, cell_list_path_to_scans);
         % this type of function reads the header for each scan
@@ -399,64 +426,64 @@
         % batch_parfeval)
         %eg. (batch_parfor(obj, @spm_reslice, cell_list_path_to_scans)
         function ret = parfeval_cell(~, func, cell_list)
-
-           for i = 1:size(cell_list, 1)
-              f(i) = parfeval(gcp(), func, 1, cell_list{i});
-           end
-           ret = cell(size(cell_list));
-           for i = 1:size(cell_list, 1)
-             [completedIdx,value] = fetchNext(f);
-             ret{completedIdx} = value;
-           end
+            
+            for i = 1:size(cell_list, 1)
+                f(i) = parfeval(gcp(), func, 1, cell_list{i});
+            end
+            ret = cell(size(cell_list));
+            for i = 1:size(cell_list, 1)
+                [completedIdx,value] = fetchNext(f);
+                ret{completedIdx} = value;
+            end
         end
-       
+        
         function ret = parfor_cell(~, func, cell_list)
-
-           parfor i = 1:size(cell_list, 1)
-              if(nargout(func) ==0)
-                  feval(func, cell_list{i});
-              else
-                  ret{i} = feval(func, cell_list{i});
-              end
-           end
-
+            
+            parfor i = 1:size(cell_list, 1)
+                if(nargout(func) ==0)
+                    feval(func, cell_list{i});
+                else
+                    ret{i} = feval(func, cell_list{i});
+                end
+            end
+            
         end
         function ret = batch_parfor(obj,  func, cell_list)
-           tl =  '';
-           parfor i = 1:size(cell_list, 1)
-              cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
-              if(nargout(func) ==0)
-                feval(func, char(cl));
-              else
-                 ret{i} = feval(func, char(cl));
-              end
-           end
+            tl =  '';
+            parfor i = 1:size(cell_list, 1)
+                cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
+                if(nargout(func) ==0)
+                    feval(func, char(cl));
+                else
+                    ret{i} = feval(func, char(cl));
+                end
+            end
         end
         function ret = batch_serial(obj,  func, cell_list)
-           tl =  '';
-           for i = 1:size(cell_list, 1)
-              cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
-              if(nargout(func) ==0)
-                feval(func, char(cl));
-              else
-                ret{i} = feval(func, char(cl));
-              end
-           end
+            tl =  '';
+            for i = 1:size(cell_list, 1)
+                cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
+                if(nargout(func) ==0)
+                    feval(func, char(cl));
+                else
+                    ret{i} = feval(func, char(cl));
+                end
+            end
         end
         function ret = batch_parfeval(obj,  func, cell_list)
-           tl =  '';
-           for i = 1:size(cell_list, 1)
-              cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
-              f(i) = parfeval(gcp(), func, 1, char(cl));
-           end
-           for i = 1:size(cell_list, 1)
-             if(nargout(func)==0)
-                 fetchNext(f);
-             else
-             [completedIdx,value] = fetchNext(f);
-             ret{completedIdx} = value;
-             end
-           end
+            tl =  '';
+            for i = 1:size(cell_list, 1)
+                cl = cellfun(@(x)[tl x], cell_list{i}, 'uni', false);
+                f(i) = parfeval(gcp(), func, 1, char(cl));
+            end
+            for i = 1:size(cell_list, 1)
+                if(nargout(func)==0)
+                    fetchNext(f);
+                else
+                    [completedIdx,value] = fetchNext(f);
+                    ret{completedIdx} = value;
+                end
+            end
         end
         
     end
