@@ -7,6 +7,8 @@ classdef PreProcessing < handle
     end
     methods
         function obj = PreProcessing(output_dir, niftifs, spm_path)
+            % Constructor that takes an output directory, NiftiFS file, and
+            % path to the desired SPM
             if nargin <3
                 spm_path = fileparts(which('spm'));
             end
@@ -20,10 +22,26 @@ classdef PreProcessing < handle
             obj.output_dir = output_dir;
         end
         function setpath(obj)
+            % Helper function to set the desired path to SPM to the top of
+            % the path
             addpath(genpath(obj.spm_path));
         end
-        
+        function dir = initialize_spm(obj, task)
+            % initialize the SPM functions cd's to the output directory if
+            % needed
+            if nargin < 2
+                task = '';
+            end
+            dir = pwd;
+            setpath(obj);
+            spm_jobman('initcfg');
+            if strcmp(task, 'realign') || strcmp(task,'coregistration')
+                cd(obj.output_dir);
+                spm('FnUIsetup','realign' ,1,1);
+            end
+        end
         function matlabbatch = get_matlabbatch(obj, step)
+            % Gets the batch parameters. 
             clear('matlabbatch');
             switch(step)
                 case 'slice_timing'
@@ -119,11 +137,16 @@ classdef PreProcessing < handle
             end
         end
         function vec = get_slice_vector(~, number_slices, ascending, interleaved)
+            % Takes the number of slices as number_slices, and 2 flags to
+            % set if the order of slices is ascending or descending, or
+            % interleaved. 
+            
+            % eg. get_slice_vector(obj, 30, 1, 1)
             if ~interleaved
                 if ascending
                     vec = 1:1:number_slices;
-                elseif ~ascending 
-                    vec = number_slices:-1:1; 
+                elseif ~ascending
+                    vec = number_slices:-1:1;
                 end
             else
                 if ascending && mod(number_slices,2)~=0
@@ -137,20 +160,25 @@ classdef PreProcessing < handle
                 end
                 
             end
-                
-        
+            
+            
         end
-        function run_slice_timing(obj, matlabbatch, TR, slice_order, ref_slice, subjects)
+        function run_slice_timing(obj, matlabbatch, TR, slice_vector, ref_slice, subjects)
+            % runs SPM slice timing
+            
+            % eg. run_slice_timing(obj, obj.get_matlabbatch('slice_timing'), 2,
+            %   get_slice_vector(obj, 30, 1, 1), 20,
+            %   get_subj_scans(obj.niftifs))
             if nargin < 6
                 subjects = get_subj_scans(obj.niftifs);
             end
-            number_slices = max(slice_order);
-            TA = TR-(TR/number_slices);         
+            number_slices = max(slice_vector);
+            TA = TR-(TR/number_slices);
             matlabbatch{1}.spm.temporal.st.scans = {}; % image list
             matlabbatch{1}.spm.temporal.st.nslices = number_slices; % number of slices
             matlabbatch{1}.spm.temporal.st.tr = TR; % TR
             matlabbatch{1}.spm.temporal.st.ta = TA; % TA
-            matlabbatch{1}.spm.temporal.st.so = slice_order; % scan order
+            matlabbatch{1}.spm.temporal.st.so = slice_vector; % scan order
             matlabbatch{1}.spm.temporal.st.refslice = ref_slice;
             initialize_spm(obj);
             for i=1:size(subjects, 1)
@@ -160,23 +188,15 @@ classdef PreProcessing < handle
                 end
             end
         end
-        function dir = initialize_spm(obj, task)
-            if nargin < 2
-               task = ''; 
-            end
-            dir = pwd;   
-            setpath(obj);
-            spm_jobman('initcfg');
-            if strcmp(task, 'realign') || strcmp(task,'coregistration')
-                cd(obj.output_dir);
-                spm('FnUIsetup','realign' ,1,1);
-            end
-        end
+        
         function run_realignment(obj, matlabbatch, subjects)
+            % run SPM realignment
+            
+            % eg. run_realignment(obj, obj.get_matlabbatch('realign'), subjs)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
-            current_dir = initialize_spm('realign');         
+            current_dir = initialize_spm('realign');
             for i = 1:size(subjects, 1)
                 for j = 1:size(subjects(i).subject_runs, 1)
                     matlabbatch{1}.spm.spatial.realign.estwrite.data = {subjects(i).subject_runs{j, 2}};
@@ -190,6 +210,10 @@ classdef PreProcessing < handle
             cd(current_dir);
         end
         function run_realignment_unwarp(obj, matlabbatch, PM_files, subjects)
+            % run SPM realign and unwarp
+            
+            % eg. run_realignment_unwarp(obj,
+            %   obj.get_matlabbatch('realignunwarp'), PhaseMap_struct, subjs)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
@@ -205,6 +229,10 @@ classdef PreProcessing < handle
             cd(current_dir);
         end
         function run_coregistration(obj, matlabbatch, subjects)
+            % run SPM coregistration
+            
+            % eg. run_coregistration(obj, obj.get_matlabbatch('coregistration'),
+            %   get_subj_scans(obj.niftifs)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
@@ -232,6 +260,10 @@ classdef PreProcessing < handle
             cd(current_dir);
         end
         function run_normalization(obj, matlabbatch, subjects)
+            % run SPM normalization
+            
+            % eg. run_normalization(obj,
+            %   obj.get_matlabbatch('normalization'), subjs)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
@@ -254,6 +286,9 @@ classdef PreProcessing < handle
         end
         
         function run_smoothing(obj, matlabbatch, subjects)
+            % run SPM smoothign
+            
+            % run_smoothing(obj, obj.get_matlabbatch('smoothing'), subjs)
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
