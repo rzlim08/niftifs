@@ -41,7 +41,7 @@ classdef PreProcessing < handle
             end
         end
         function matlabbatch = get_matlabbatch(obj, step)
-            % Gets the batch parameters. 
+            % Gets the batch parameters.
             clear('matlabbatch');
             switch(step)
                 case 'slice_timing'
@@ -139,7 +139,7 @@ classdef PreProcessing < handle
         function vec = get_slice_vector(~, number_slices, ascending, interleaved)
             % Takes the number of slices as number_slices, and 2 flags to
             % set if the order of slices is ascending or descending, or
-            % interleaved. 
+            % interleaved.
             
             % eg. get_slice_vector(obj, 30, 1, 1)
             if ~interleaved
@@ -196,7 +196,7 @@ classdef PreProcessing < handle
             if nargin < 3
                 subjects = get_subj_scans(obj.niftifs);
             end
-            current_dir = initialize_spm('realign');
+            current_dir = obj.initialize_spm('realign');
             for i = 1:size(subjects, 1)
                 for j = 1:size(subjects(i).subject_runs, 1)
                     matlabbatch{1}.spm.spatial.realign.estwrite.data = {subjects(i).subject_runs{j, 2}};
@@ -228,6 +228,20 @@ classdef PreProcessing < handle
             end
             cd(current_dir);
         end
+        function run_segmentation(obj, matlabbatch, subjects)
+            if nargin < 3
+                subjects = get_subj_scans(obj.niftifs);
+            end
+            structurals = get_structural_scans(obj.niftifs);
+            for i = 1:size(subjects,1)
+                structural_scan = structurals(i);
+                matlabbatch{1}.spm.spatial.preproc.data = structural_scan;
+                spm_jobman('run', matlabbatch);
+                
+            end
+        end
+        
+        
         function run_coregistration(obj, matlabbatch, subjects)
             % run SPM coregistration
             
@@ -240,7 +254,8 @@ classdef PreProcessing < handle
             structurals = get_structural_scans(obj.niftifs);
             
             for i = 1:size(subjects,1)
-                structural_scan = structurals(~cellfun(@isempty, strfind(structurals, subjects(i).name)));
+                subject_name = strsplit(subjects(i).name, filesep);
+                structural_scan = structurals(~cellfun(@isempty, strfind(structurals, subject_name{end})));
                 for j = 1:size(subjects(i).subject_runs, 1)
                     scan_folder = fileparts(subjects(i).subject_runs{j,2}{1,1});
                     mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch]]);
@@ -273,7 +288,8 @@ classdef PreProcessing < handle
                 warning('There is not a single structural scan per member');
             end
             for i = 1:size(subjects, 1)
-                structural_scan = structurals(~cellfun(@isempty, strfind(structurals, subjects(i).name)));
+                subject_name = strsplit(subjects(i).name, filesep);
+                structural_scan = structurals(~cellfun(@isempty, strfind(structurals, subject_name{end})));
                 structural_folder = fileparts(structural_scan{1,1});
                 seg_sn_file = obj.niftifs.expand_folders([strsplit(structural_folder, filesep), '*seg_sn.mat']);
                 
