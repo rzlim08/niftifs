@@ -1,0 +1,4 @@
+fs = NiftiFS(pwd);
+set_functional_dirstruct(fs, '{top_level}/meow/{groups}/{subjects}/{runs}/{scans}');
+set_subjects(fs);
+set_runs(fs);

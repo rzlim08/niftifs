@@ -1,0 +1,24 @@
+structural:
+right	0	
+forward	-45.3
+up	3.3
+
+strucutral (PUCor):
+right	-1.7
+forward	-45.1
+up	3.5
+
+functional (180 samples):
+right	-1.6
+forward	-42.4
+up	-1.1
+
+functional (Sternberg_4):
+right	0
+forward	6.2
+up	-0.9
+
+functional (Sternberg_5):
+right	-1.6
+forward	-42.4
+up	0.6

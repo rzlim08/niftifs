@@ -261,11 +261,13 @@ classdef PreProcessing < handle
                     mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch]]);
                     a = 2;
                     % If mean image is not matched
-                    while isempty(mean_image) && obj.niftifs.scan_strmatch(a) ~= '*'
+                    if isempty(mean_image)
+                        while isempty(mean_image) && obj.niftifs.scan_strmatch(a) ~= '*'
+                            mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch(a:end)]]);
+                            a = a+1;
+                        end
                         mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch(a:end)]]);
-                        a = a+1;
                     end
-                    mean_image = obj.niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', obj.niftifs.scan_strmatch(a:end)]]);
                     matlabbatch{1}.spm.spatial.coreg.estimate.ref = structural_scan; % T1 image path
                     matlabbatch{1}.spm.spatial.coreg.estimate.source = mean_image; % mean image path
                     matlabbatch{1}.spm.spatial.coreg.estimate.other = subjects(i).subject_runs{j, 2}; % functional images paths

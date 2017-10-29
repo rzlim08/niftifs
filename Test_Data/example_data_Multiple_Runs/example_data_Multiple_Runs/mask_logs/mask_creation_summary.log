@@ -1,0 +1,21 @@
+sample summary line
+% S R Identifier                        voxels   -ref       RSA    LSA    RSP    LSP    RIA    LIA    RIP    LIP  flags 
+% 2 1 aoP_269784_run1                    67207   6185       562    334    738    335   1112    877   1708    519    [ > 500]
+%   definitions:
+%     S          :  Subject Number - may not correspond to original subject number
+%     R          :  Run Number - may not correspond to original session number
+%     Identifier :  unique identifier for subject mask selection
+%     voxels     :  size of this subject mask
+%     -ref       :  number of voxels removed from base reference mask
+%     Regions    :  indicates amount of voxels removed by region
+%                :    RSA = Right Superior Anterior
+%                :    LSA = Left  Superior Anterior
+%                :    RSP = Right Superior Posterior
+%                :    LSP = Left  Superior Posterior
+%                :    RIA = Right Inferior Anterior
+%                :    LIA = Left  Inferior Anterior
+%                :    RIP = Right Inferior Posterior
+%                :    LIP = Left  Inferior Posterior
+%     flag       :  message flags - self explanatory, blank if no anomaly or error
+%
+

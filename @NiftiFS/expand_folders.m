@@ -18,4 +18,5 @@ for i = 1:size(cellpath, 2)
             any(strcmp(cellpath{i}, {'{subjects}';'{runs}';'{groups}'})));
     end
 end
+if strcmp(filepath, '*'); filepath = {}; end;
 end

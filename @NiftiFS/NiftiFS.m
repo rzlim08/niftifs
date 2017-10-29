@@ -9,8 +9,8 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         scan_strmatch = '*'
         group_strmatch = '*'
         structural_strmatch = '*'
-        subjects
-        runs
+        subjects = {}
+        runs = {}
         groups
         top_level
         functional_scans
@@ -85,12 +85,21 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         counts = count_runs(obj);
         ran_art_slice(obj);
         ran_slice_timing(obj);
+        ran_realignment(obj);
         ran_normalization(obj);
         ran_smoothing(obj);
         ran_unwarping(obj);
         undo(obj, num);
         saveas(obj, filename);
-        
+        function subj_list = split_subjs(obj, num_to_split)
+           subjs = obj.get_subj_scans;
+           number_subjs_per_group = floor(size(subjs,1)/(num_to_split-1));
+           subj_list = cell(num_to_split,1);
+           for i = 1:num_to_split-1
+               subj_list{i,1} = subjs((number_subjs_per_group*(i-1)+1):(number_subjs_per_group*(i-1)+number_subjs_per_group));
+           end
+           subj_list{end} = subjs((number_subjs_per_group*(i)+1): end);
+        end
         %% Function Methods
         % function methods are just little layers that run functions on
         % cell lists easily.
