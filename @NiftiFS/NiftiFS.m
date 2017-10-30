@@ -10,6 +10,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         group_strmatch = '*'
         structural_strmatch = '*'
         subjects = {}
+        subject_array;
         runs = {}
         groups
         top_level
@@ -61,7 +62,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         reset_scan_strmatch(obj, strmatch);
         reset_top_level(obj, path);
         set_functional_scans(obj);
-        
+        set_structural_scans(obj);
         %% Get properties
         scans = get_functional_scans(obj);
         scans = get_structural_scans(obj);

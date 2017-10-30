@@ -1,8 +1,7 @@
 classdef Subject < handle
-    properties ( SetAccess = private, GetAccess = private)
+    properties ( SetAccess = private)
         path = {};
         id = {};
-        strmatch = '*';
         structural_path = {};
         runs = [];
     end
@@ -19,9 +18,6 @@ classdef Subject < handle
         end
         function id = get_id(obj)
            id = obj.id; 
-        end
-        function strmatch = get_strmatch(obj)
-           strmatch = obj.strmatch; 
         end
         function structural = get_structural_path(obj)
            structural = obj.structural_path; 
