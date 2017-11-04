@@ -225,6 +225,10 @@ classdef PreProcessing < handle
                     spm_jobman('run', matlabbatch);
                 end
             end
+            psfile = dir([pwd filesep 'spm_*20*.ps']);
+            if size(psfile,1) ==1
+                movefile(psfile.name, ['realignunwarp_' date '.ps']);
+            end
             cd(current_dir);
         end
         function run_segmentation(obj, matlabbatch, subjects)
@@ -241,7 +245,7 @@ classdef PreProcessing < handle
         end
         
         
-        function run_coregistration(obj, matlabbatch, subjects, structurals)
+        function run_coregistration(obj, matlabbatch, subjects)
             % run SPM coregistration
             
             % eg. run_coregistration(obj, obj.get_matlabbatch('coregistration'),
@@ -250,7 +254,7 @@ classdef PreProcessing < handle
                 subjects = get_subj_scans(obj.niftifs);
             end
             current_dir = initialize_spm(obj, 'coregistration');
-            %structurals = get_structural_scans(obj.niftifs);
+            structurals = get_structural_scans(obj.niftifs);
             
             for i = 1:size(subjects,1)
                 subject_name = strsplit(subjects(i).name, filesep);
@@ -272,6 +276,10 @@ classdef PreProcessing < handle
                     matlabbatch{1}.spm.spatial.coreg.estimate.other = subjects(i).subject_runs{j, 2}; % functional images paths
                     spm_jobman('run', matlabbatch);
                 end
+            end
+            psfile = dir([pwd filesep 'spm_*20*.ps']);
+            if size(psfile,1) ==1
+                movefile(psfile.name, ['coregistration_' date '.ps']);
             end
             cd(current_dir);
         end

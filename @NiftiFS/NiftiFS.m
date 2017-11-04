@@ -32,7 +32,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         realignment_prefix = 'r'
         realignment = 0
         
-        rm_list = struct('rm_runs',[], 'rm_subjects', [])
+        rm_list = struct('rm_runs',[], 'rm_subjects', [], 'rm_structurals', [])
     end
     methods
         
@@ -69,7 +69,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         scans = get_functional_scans(obj);
         scans = get_structural_scans(obj);
         subj_struct = get_subj_scans(obj);
-        subj_struct = get_random_subj(obj, number);     
+        subj_struct = get_random_subj(obj, number);
         
         %% Clear properties
         clear_subjects(obj);
@@ -78,12 +78,20 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         
         %% Methods
         filepath = expand_folders(obj, cellpath);
+        filepath = expand_folders_structural(obj, cellpath);
         files = get_files(~, full_files);
         new_obj = move_functionals(obj, new_dir, subjs);
         filecell = cartesian(~, filepath, entry, only_dir);
         output = replace_entry(obj,entry);
         remove_runs(obj, pattern);
         remove_subjs(obj, pattern);
+        function remove_structurals(obj, pattern)
+            % removes all subjects that match a string, pattern. eg.
+            % (remove_structurals(obj, 's01'))
+            obj.rm_list.rm_structurals{end+1} = pattern;
+            obj.structural_scans = ...
+                obj.structural_scans(find(cellfun(@isempty, strfind(obj.structural_scans, pattern))));
+        end
         rm(obj, patterns);
         counts = count_runs(obj);
         ran_art_slice(obj);
@@ -95,13 +103,13 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         undo(obj, num);
         saveas(obj, filename);
         function subj_list = split_subjs(obj, num_to_split)
-           subjs = obj.get_subj_scans;
-           number_subjs_per_group = floor(size(subjs,1)/(num_to_split-1));
-           subj_list = cell(num_to_split,1);
-           for i = 1:num_to_split-1
-               subj_list{i,1} = subjs((number_subjs_per_group*(i-1)+1):(number_subjs_per_group*(i-1)+number_subjs_per_group));
-           end
-           subj_list{end} = subjs((number_subjs_per_group*(i)+1): end);
+            subjs = obj.get_subj_scans;
+            number_subjs_per_group = floor(size(subjs,1)/(num_to_split-1));
+            subj_list = cell(num_to_split,1);
+            for i = 1:num_to_split-1
+                subj_list{i,1} = subjs((number_subjs_per_group*(i-1)+1):(number_subjs_per_group*(i-1)+number_subjs_per_group));
+            end
+            subj_list{end} = subjs((number_subjs_per_group*(i)+1): end);
         end
         %% Function Methods
         % function methods are just little layers that run functions on
