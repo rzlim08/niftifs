@@ -107,7 +107,7 @@ classdef PreProcessing < handle
                     matlabbatch{1}.spm.spatial.normalise.write.roptions.prefix = obj.niftifs.normalization_prefix;
                 case 'smoothing'
                     matlabbatch{1}.spm.spatial.smooth.data = {}; % image list
-                    matlabbatch{1}.spm.spatial.smooth.fwhm = [0,0,0] ;
+                    matlabbatch{1}.spm.spatial.smooth.fwhm = [6,6,6] ;
                     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
                     matlabbatch{1}.spm.spatial.smooth.im = 0;
                     matlabbatch{1}.spm.spatial.smooth.prefix = obj.niftifs.smoothing_prefix;
@@ -140,7 +140,6 @@ classdef PreProcessing < handle
             % Takes the number of slices as number_slices, and 2 flags to
             % set if the order of slices is ascending or descending, or
             % interleaved.
-            
             % eg. get_slice_vector(obj, 30, 1, 1)
             if ~interleaved
                 if ascending
@@ -242,7 +241,7 @@ classdef PreProcessing < handle
         end
         
         
-        function run_coregistration(obj, matlabbatch, subjects)
+        function run_coregistration(obj, matlabbatch, subjects, structurals)
             % run SPM coregistration
             
             % eg. run_coregistration(obj, obj.get_matlabbatch('coregistration'),
@@ -251,7 +250,7 @@ classdef PreProcessing < handle
                 subjects = get_subj_scans(obj.niftifs);
             end
             current_dir = initialize_spm(obj, 'coregistration');
-            structurals = get_structural_scans(obj.niftifs);
+            %structurals = get_structural_scans(obj.niftifs);
             
             for i = 1:size(subjects,1)
                 subject_name = strsplit(subjects(i).name, filesep);

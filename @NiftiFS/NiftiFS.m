@@ -18,6 +18,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         old_functionals = {};
         structural_scans
         is_nii = 0
+        is_custom_suffix = 0;
         art_slice_prefix = 'g'
         art_slice = 0
         slice_timing_prefix = 'a'
@@ -59,6 +60,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         set_runs(obj);
         set_groups(obj);
         set_is_nii(obj, flag);
+        set_custom_suffix(obj, flag);
         reset_scan_strmatch(obj, strmatch);
         reset_top_level(obj, path);
         set_functional_scans(obj);

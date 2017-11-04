@@ -17,7 +17,6 @@ for i = 1:size(subjs)
     end
 end
 
-%% redo with deep copy
 new_obj = copy(obj);
 new_obj.top_level = new_dir;
 new_obj.clear_subjects;
