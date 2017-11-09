@@ -304,7 +304,7 @@ classdef PreProcessing < handle
         end
         
         function run_smoothing(obj, matlabbatch, subjects)
-            % run SPM smoothign
+            % run SPM smoothing
             
             % run_smoothing(obj, obj.get_matlabbatch('smoothing'), subjs)
             if nargin < 3
