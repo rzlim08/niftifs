@@ -16,7 +16,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         top_level
         functional_scans
         old_functionals = {};
-        structural_scans
+        structural_scans = {};
         is_nii = 0
         is_custom_suffix = 0;
         art_slice_prefix = 'g'

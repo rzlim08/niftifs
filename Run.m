@@ -25,7 +25,12 @@ classdef Run < handle
         end
         function rp = get_remaining_path(~,dirstruct)
             path_cell = strsplit(dirstruct, '{runs}');
-            rp = path_cell(2);
+            if size(path_cell, 2) == 2
+                rp = path_cell(2);
+            else 
+                rp = path_cell;
+            end 
+           
         end
         function set_scans(obj, niftifs)
             obj.scans = [];

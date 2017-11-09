@@ -50,10 +50,14 @@ classdef Subject < handle
             end
         end
         function set_scans(obj, niftifs)
+           if(size(obj.runs)==0)
+               obj.runs = [obj.runs; Run(obj.path, obj.id, obj.path_left{:})];
+               
+           end
            for i = 1:size(obj.runs)
                obj.runs(i).set_scans(niftifs);
            end
-            
+           
         end
         
         function bool = eq(obj, other)
