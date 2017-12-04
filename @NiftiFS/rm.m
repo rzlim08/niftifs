@@ -7,5 +7,6 @@ end
 for i = 1:size(patterns)
     remove_runs(obj, patterns{i});
     remove_subjs(obj, patterns{i});
+    remove_structurals(obj, patterns{i});
 end
 end
