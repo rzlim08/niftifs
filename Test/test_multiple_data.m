@@ -36,6 +36,13 @@ classdef test_multiple_data < matlab.unittest.TestCase
             scans = get_subj_scans(testCase.fs);
             testCase.verifyEqual(size(scans,1), 4);
         end
+        function test_remove_subjects(testCase)
+            set_scan_strmatch(testCase.fs, 'fs*');
+            set_functional_scans(testCase.fs);
+            testCase.fs.rm({'s01'});
+            subjs = get_subjects(testCase.fs.subject_array);
+            testCase.verifyEqual(size(subjs,1),3);
+        end
     end
     
 end

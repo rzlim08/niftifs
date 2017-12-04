@@ -10,7 +10,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         group_strmatch = '*'
         structural_strmatch = '*'
         subjects = {}
-        subject_array;
+        subject_array = SubjectArray();
         runs = {}
         groups
         top_level
@@ -18,6 +18,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         old_functionals = {};
         structural_scans = {};
         is_nii = 0
+        is_runscan = 0;
         is_custom_suffix = 0;
         art_slice_prefix = 'g'
         art_slice = 0
@@ -60,12 +61,18 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         set_runs(obj);
         set_groups(obj);
         set_is_nii(obj, flag);
+        function set_is_runscan(obj, flag)
+           obj.is_runscan = flag; 
+        end
         set_custom_suffix(obj, flag);
         reset_scan_strmatch(obj, strmatch);
         reset_top_level(obj, path);
         set_functional_scans(obj);
         set_structural_scans(obj);
         %% Get properties
+        function subject_array = get_subject_array(obj) 
+           subject_array = obj.subject_array; 
+        end
         scans = get_functional_scans(obj);
         scans = get_structural_scans(obj);
         subj_struct = get_subj_scans(obj);

@@ -26,22 +26,22 @@ classdef test_array_funs< matlab.unittest.TestCase
     methods(Test)
         
         function test_add_subject(testCase)
-            Subject = testCase.fs.subject_array{1,1};
+            Subject = testCase.fs.subject_array.pop_subject;
             sa = SubjectArray();
             sa.add(Subject);
             testCase.verifyEqual(size(sa.subjects,1), 1);
         end
         function test_add_duplicate_subject(testCase)
-            Subject = testCase.fs.subject_array{1,1};
+            Subject = testCase.fs.subject_array.pop_subject;
             sa = SubjectArray();
             sa.add(Subject);
             sa.add(Subject);
             testCase.verifyEqual(size(sa.subjects,1), 1);
         end
         function test_add_multiple_subject(testCase)
-            Subject = testCase.fs.subject_array{1,1};
-            Subject2 = testCase.fs.subject_array{2,1};
-            Subject3 = testCase.fs.subject_array{3,1};
+            Subject = testCase.fs.subject_array.pop_subject;
+            Subject2 = testCase.fs.subject_array.pop_subject;
+            Subject3 = testCase.fs.subject_array.pop_subject;
             sa = SubjectArray();
             sa.add(Subject);
             sa.add(Subject2);
@@ -49,9 +49,9 @@ classdef test_array_funs< matlab.unittest.TestCase
             testCase.verifyEqual(size(sa.subjects,1), 3);
         end
         function test_get_ids(testCase)
-            Subject = testCase.fs.subject_array{1,1};
-            Subject2 = testCase.fs.subject_array{2,1};
-            Subject3 = testCase.fs.subject_array{3,1};
+            Subject = testCase.fs.subject_array.pop_subject;
+            Subject2 = testCase.fs.subject_array.pop_subject;
+            Subject3 = testCase.fs.subject_array.pop_subject;
             sa = SubjectArray();
             sa.add(Subject);
             sa.add(Subject2);
@@ -60,9 +60,9 @@ classdef test_array_funs< matlab.unittest.TestCase
             testCase.verifyEqual(size(sa.get_ids,1), 3);
         end
         function test_remove(testCase)
-            Subject = testCase.fs.subject_array{1,1};
-            Subject2 = testCase.fs.subject_array{2,1};
-            Subject3 = testCase.fs.subject_array{3,1};
+            Subject = testCase.fs.subject_array.pop_subject;
+            Subject2 = testCase.fs.subject_array.pop_subject;
+            Subject3 = testCase.fs.subject_array.pop_subject;
             sa = SubjectArray();
             sa.add(Subject);
             sa.add(Subject2);
@@ -74,9 +74,9 @@ classdef test_array_funs< matlab.unittest.TestCase
             testCase.verifyEqual(size(sa.subjects,1), 2);
         end
         function test_remove_strmatch(testCase)
-            Subject = testCase.fs.subject_array{1,1};
-            Subject2 = testCase.fs.subject_array{2,1};
-            Subject3 = testCase.fs.subject_array{3,1};
+            Subject = testCase.fs.subject_array.pop_subject;
+            Subject2 = testCase.fs.subject_array.pop_subject;
+            Subject3 = testCase.fs.subject_array.pop_subject;
             sa = SubjectArray();
             sa.add(Subject);
             sa.add(Subject2);
@@ -87,6 +87,29 @@ classdef test_array_funs< matlab.unittest.TestCase
             testCase.verifyEqual(size(sa.subjects,1), 2);
             sa.remove_strmatch('Careap');
             testCase.verifyEqual(size(sa.subjects,1), 0);
+        end
+        function test_get_runs(testCase)
+            Subject = testCase.fs.subject_array.pop_subject;
+            Subject2 = testCase.fs.subject_array.pop_subject;
+            Subject3 = testCase.fs.subject_array.pop_subject;
+            sa = SubjectArray();
+            sa.add(Subject);
+            sa.add(Subject2);
+            sa.add(Subject3);
+            testCase.verifyEqual(size(sa.get_runs,1), 6);
+        end
+        function test_make_KV(testCase)
+            
+            set_functional_scans(testCase.fs);
+            Subject = testCase.fs.subject_array.pop_subject;
+            Subject2 = testCase.fs.subject_array.pop_subject;
+            Subject3 = testCase.fs.subject_array.pop_subject;
+            sa = SubjectArray();
+            sa.add(Subject);
+            sa.add(Subject2);
+            sa.add(Subject3);
+            sa.make_KV;
+            testCase.verifyTrue(logical(exist('KV_subjects.mat', 'file')));
         end
     end
     

@@ -9,9 +9,6 @@ obj.path_to_runs = expand_folders(obj, [strsplit(ndir{1}, filesep) '{runs}']);
 obj.runs = unique(obj.get_files(obj.path_to_runs));
 set_runs_class(obj)
 end
-function filepath = set_runs_class(obj)
-for i = 1:size(obj.subject_array,1)
-    obj.subject_array{i}.set_runs(obj);
-end
-
+function set_runs_class(obj)
+cellfun(@(x)(x.set_runs(obj)), get_subjects(obj.subject_array));
 end

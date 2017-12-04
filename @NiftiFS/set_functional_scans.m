@@ -7,8 +7,5 @@ set_functional_scans_class(obj)
 end
 
 function set_functional_scans_class(obj)
-for i = 1:size(obj.subject_array,1)
-    obj.subject_array{i}.set_scans(obj);
-end
-
+cellfun(@(x)(x.set_scans(obj)), get_subjects(obj.subject_array));
 end

@@ -5,7 +5,7 @@ switch lower(entry)
         entry =  {obj.top_level};
     case '{subjects}'
         entry = {obj.subject_strmatch};
-    case '{runs}'
+    case '{runs}' 
         entry = {obj.run_strmatch};
     case '{groups}'
         entry = {obj.group_strmatch};

@@ -3,6 +3,7 @@ classdef Subject < handle
         path = {};
         id = {};
         structural_path = {};
+        associated_matrices = [];
         runs = [];
         path_left = {};
     end
@@ -25,13 +26,19 @@ classdef Subject < handle
         function id = get_id(obj)
             id = obj.id;
         end
+        function id = get_run_id(obj)
+            id = {};
+            for run =1:length(obj.runs)
+                id = [id;[obj.id '_' obj.runs(run).get_name]];
+            end
+        end
         function structural = get_structural_path(obj)
             structural = obj.structural_path;
         end
         function set_structural_path(obj, sp)
             obj.structural_path = sp;
         end
-        function last = get_last_folder(obj, str)
+        function last = get_last_folder(~, str)
             split = strsplit(str, filesep);
             last = split{end};
         end
@@ -40,26 +47,44 @@ classdef Subject < handle
             obj.runs = [];
             run_dirstruct = strsplit(obj.path_left{:}, filesep);
             run_dirstruct(cellfun(@isempty, run_dirstruct)) = [];
-            filepath = {obj.path};
-            for i = 1:size(run_dirstruct, 2)
-                filepath = niftifs.cartesian(filepath, niftifs.replace_entry(run_dirstruct{i}), 1);
-                if(strcmp(run_dirstruct{i},'{runs}')); break; end;
+            filepath = {obj.path};        
+            if(~niftifs.is_runscan)
+                for i = 1:size(run_dirstruct, 2)
+                    filepath = niftifs.cartesian(filepath, niftifs.replace_entry(run_dirstruct{i}), 1);
+                    if(strcmp(run_dirstruct{i},'{runs}')); break; end
+                end
+                for i = 1:size(filepath)
+                    obj.runs = [obj.runs; Run(filepath{i}, obj.get_last_folder(filepath{i}), obj.path_left{:})];
+                end
+            else
+                for i = 1:size(run_dirstruct, 2)
+                    filepath = niftifs.cartesian(filepath, niftifs.replace_entry(run_dirstruct{i}), 0);
+                    if(strcmp(run_dirstruct{i},'{runs}')); break; end
+                end
+                for i = 1:size(filepath)
+                    obj.runs = [obj.runs; RunScan(filepath{i}, obj.get_last_folder(filepath{i}), obj.path_left{:})];
+                end
             end
-            for i = 1:size(filepath)
-                obj.runs = [obj.runs; Run(filepath{i}, obj.get_last_folder(filepath{i}), obj.path_left{:})];
-            end
+        end
+        function runs = get_runs(obj)
+            runs = obj.runs;
         end
         function set_scans(obj, niftifs)
-           if(size(obj.runs)==0)
-               obj.runs = [obj.runs; Run(obj.path, obj.id, obj.path_left{:})];
-               
-           end
-           for i = 1:size(obj.runs)
-               obj.runs(i).set_scans(niftifs);
-           end
-           
+            if(size(obj.runs)==0)
+                obj.runs = [obj.runs; Run(obj.path, obj.id, obj.path_left{:})];
+                
+            end
+            for i = 1:size(obj.runs)
+                obj.runs(i).set_scans(niftifs);
+            end
+            
         end
-        
+        function add_associated_matrix(obj, name, data)
+            obj.associated_matrices.(name) = data;
+        end
+        function mat = get_associated_matrix(obj, name)
+            mat = obj.associated_matrices.(name);
+        end
         function bool = eq(obj, other)
             bool = (obj.id == other.id);
         end

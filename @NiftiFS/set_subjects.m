@@ -8,7 +8,8 @@ subjects =  expand_folders(obj, [strsplit(ndir{1}, filesep) '{subjects}']);
 obj.path_to_subjects = subjects;
 obj.subjects = unique(obj.get_files(obj.path_to_subjects));
 %% 
-obj.subject_array=cellfun(@(x) Subject(get_last_folder(x),x,obj.functional_dirstruct), subjects, 'UniformOutput', 0);
+obj.subject_array = SubjectArray();
+cellfun(@(x) obj.subject_array.add(Subject(get_last_folder(x),x,obj.functional_dirstruct)), subjects);
 end
 
 function last = get_last_folder(str)
