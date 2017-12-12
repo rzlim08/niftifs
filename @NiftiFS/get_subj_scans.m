@@ -31,7 +31,7 @@ end
 end
 
 function check_if_subjects(obj)
-if(isempty(obj.subjects))
+if(isempty(obj.subject_array.get_subjects))
     error('no subjects');
 end
 end

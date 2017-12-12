@@ -48,7 +48,7 @@ classdef Subject < handle
             run_dirstruct = strsplit(obj.path_left{:}, filesep);
             run_dirstruct(cellfun(@isempty, run_dirstruct)) = [];
             filepath = {obj.path};        
-            if(~niftifs.is_runscan)
+            if(~niftifs.get_is4D)
                 for i = 1:size(run_dirstruct, 2)
                     filepath = niftifs.cartesian(filepath, niftifs.replace_entry(run_dirstruct{i}), 1);
                     if(strcmp(run_dirstruct{i},'{runs}')); break; end
