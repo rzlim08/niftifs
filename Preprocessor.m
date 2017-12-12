@@ -5,6 +5,7 @@ classdef Preprocessor < handle
         spm_path = '';
         asc;
         interleaved;
+        cache_scans = 0;
     end
     methods
         function obj = Preprocessor(output_dir, niftifs, spm_path)
@@ -190,7 +191,7 @@ classdef Preprocessor < handle
                     scans = runs{i}.get_scans;
                     vol = spm_vol(strrep(scans{1,1}, ',1', ''));
                     if size(vol,1)>1
-                       vol = vol(1); 
+                        vol = vol(1);
                     end
                     if min(vol.dim) ~= max(slice_vector)
                         matlabbatch{1}.spm.temporal.st.nslices = min(vol.dim);
@@ -203,7 +204,7 @@ classdef Preprocessor < handle
                 end
             end
         end
-        
+
         function run_realignment(obj, matlabbatch, subjects)
             % run SPM realignment
             
@@ -214,7 +215,8 @@ classdef Preprocessor < handle
             current_dir = obj.initialize_spm('realign');
             runs = subjects.get_runs;
             for i=1:size(runs, 1)
-                matlabbatch{1}.spm.spatial.realign.estwrite.data = {runs{i}.get_scans};
+                scans = runs{i}.get_scans;
+                matlabbatch{1}.spm.spatial.realign.estwrite.data = {scans};
                 try
                     spm_jobman('run', matlabbatch);
                 catch
@@ -299,7 +301,7 @@ classdef Preprocessor < handle
                 runs = subjects{i}.get_runs;
                 for j = 1:size(runs, 1)
                     try
-                        mean_image = get_mean_image(obj, runs(j).get_scans, obj.niftifs, i, j);
+                        mean_image = get_mean_image(obj, runs(j).get_scans, obj.niftifs);
                         matlabbatch{1}.spm.spatial.coreg.estimate.ref = structural_scan; % T1 image path
                         matlabbatch{1}.spm.spatial.coreg.estimate.source = mean_image; % mean image path
                         matlabbatch{1}.spm.spatial.coreg.estimate.other = runs(j).get_scans; % functional images paths

@@ -28,7 +28,7 @@ classdef SubjectArray < handle
                      new_sa.add(obj.subjects{j+1});
                   end
                end
-               save(['subjects ' num2str(i)], 'new_sa');
+               save(['subjects_' num2str(i)], 'new_sa');
                new_sa = SubjectArray();
             end
         end
@@ -76,6 +76,13 @@ classdef SubjectArray < handle
             else
                 match = 0;
             end
+        end
+        function cache(obj, path_to_remote, temp_path)
+            if nargin<3
+                temp_path = '/tmp';
+            end
+            cellfun(@(x)(cache(x, path_to_remote, temp_path)), obj.subjects);
+            
         end
         function ids = get_run_ids(obj)
            ids = cellfun(@get_run_id, obj.subjects, 'UniformOutput', 0); 
