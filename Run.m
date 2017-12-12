@@ -1,6 +1,7 @@
 classdef Run < handle
     properties ( SetAccess = protected)
         path = {};
+        uncache_path = [];
         name = {};
         scans = [];
         associated_matrices = [];
@@ -34,6 +35,16 @@ classdef Run < handle
             else
                 rp = path_cell;
             end
+        end
+        function move_scans(obj, from, to)
+           obj.scans = cellfun(@(x)(strrep(x, from, to)), obj.scans, 'UniformOutput', 0);
+        end
+        function cache(obj, from, to)
+            old_path = obj.scans;
+            obj.uncache_path = old_path;
+            move_scans(obj, from, to);
+            new_path = obj.scans;
+            cellfun(@(x, y) (copyfile(x,y)), old_path, new_path);
         end
         function set_scans(obj, niftifs)
             obj.scans = [];

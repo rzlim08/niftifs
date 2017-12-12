@@ -85,6 +85,14 @@ classdef Subject < handle
         function mat = get_associated_matrix(obj, name)
             mat = obj.associated_matrices.(name);
         end
+        function cache(obj, path_to_remote, temp_path)
+            
+           for i = 1:size(obj.runs)
+              
+             obj.runs(i).cache(path_to_remote, temp_path); 
+               
+           end
+        end
         function bool = eq(obj, other)
             bool = (obj.id == other.id);
         end
