@@ -95,12 +95,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         end
         rm(obj, patterns);
         counts = count_runs(obj);
-        ran_art_slice(obj);
-        ran_slice_timing(obj);
-        ran_realignment(obj);
-        ran_normalization(obj);
-        ran_smoothing(obj);
-        ran_unwarping(obj);
+        s = summary(obj);
         undo(obj, num);
         saveas(obj, filename);
         function subj_list = split_subjs(obj, num_to_split)

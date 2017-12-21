@@ -32,6 +32,15 @@ classdef Subject < handle
                 id = [id;[obj.id '_' obj.runs(run).get_name]];
             end
         end
+        function remove_run(obj, pattern)
+           index = [];
+           for run = 1:length(obj.runs)
+              if ~isempty(strfind(obj.runs(run).get_name, pattern))
+                 index = [index; run];
+              end
+           end
+           obj.runs(index)= [];
+        end
         function structural = get_structural_path(obj)
             structural = obj.structural_path;
         end

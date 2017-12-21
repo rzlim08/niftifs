@@ -37,14 +37,26 @@ classdef Run < handle
             end
         end
         function move_scans(obj, from, to)
-           obj.scans = cellfun(@(x)(strrep(x, from, to)), obj.scans, 'UniformOutput', 0);
+            obj.scans = cellfun(@(x)(strrep(x, from, to)), obj.scans, 'UniformOutput', 0);
         end
         function cache(obj, from, to)
             old_path = obj.scans;
             obj.uncache_path = old_path;
             move_scans(obj, from, to);
             new_path = obj.scans;
+            [folder, ~, ext] = fileparts(new_path{1,1});
+            mkdir(folder);
             cellfun(@(x, y) (copyfile(x,y)), old_path, new_path);
+            if strcmp(ext,'.img')
+                old_hdr_path = cellfun(@(x)(strrep(x, 'img', 'hdr')), old_path, 'UniformOutput', 0);
+                new_hdr_path = cellfun(@(x)(strrep(x, 'img', 'hdr')), new_path, 'UniformOutput', 0);
+                cellfun(@(x, y) (copyfile(x,y)), old_hdr_path, new_hdr_path);
+            end
+        end
+        function uncache(obj)
+            copyfile(fileparts(obj.path{1,1}), fileparts(obj.uncache_path{1,1}));
+            obj.path = obj.uncache_path;
+            obj.uncache_path = [];
         end
         function set_scans(obj, niftifs)
             obj.scans = [];
@@ -58,6 +70,13 @@ classdef Run < handle
                 obj.scans = filepath;
             end
             
+        end
+        function append_scan(obj, prefix)
+            obj.scans = cellfun(@(x) obj.filename_append(x, prefix), obj.scans, 'UniformOutput', 0);
+        end
+        function fn = filename_append(~, x, prefix)
+            [folder, file, ext] = fileparts(x);
+            fn = [folder filesep prefix file ext];
         end
         function set_design_matrix(obj, onsets, num_bins, cond_names, path)
             obj.design_matrix = Design(onsets, num_bins, cond_names, size(obj.scans,1));
