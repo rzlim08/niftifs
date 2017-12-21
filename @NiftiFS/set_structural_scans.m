@@ -1,6 +1,7 @@
 function set_structural_scans(obj)
 % gets all structural scans for all subjects
-obj.structural_scans = expand_folders_structural(obj, strsplit(obj.structural_dirstruct, filesep));
+
+obj.structural_scans = obj.structural_directory.get_structurals;
 add_structural_to_subject(obj.subject_array.subjects,obj.structural_scans)
 
 end

@@ -52,14 +52,14 @@ classdef Subject < handle
             last = split{end};
         end
         
-        function set_runs(obj, niftifs)
+        function set_runs(obj, directory, is4D)
             obj.runs = [];
             run_dirstruct = strsplit(obj.path_left{:}, filesep);
             run_dirstruct(cellfun(@isempty, run_dirstruct)) = [];
             filepath = {obj.path};        
-            if(~niftifs.get_is4D)
+            if(~is4D)
                 for i = 1:size(run_dirstruct, 2)
-                    filepath = niftifs.cartesian(filepath, niftifs.replace_entry(run_dirstruct{i}), 1);
+                    filepath = directory.cartesian(filepath, directory.replace_entry(run_dirstruct{i}), 1);
                     if(strcmp(run_dirstruct{i},'{runs}')); break; end
                 end
                 for i = 1:size(filepath)
@@ -67,7 +67,7 @@ classdef Subject < handle
                 end
             else
                 for i = 1:size(run_dirstruct, 2)
-                    filepath = niftifs.cartesian(filepath, niftifs.replace_entry(run_dirstruct{i}), 0);
+                    filepath = directory.cartesian(filepath, directory.replace_entry(run_dirstruct{i}), 0);
                     if(strcmp(run_dirstruct{i},'{runs}')); break; end
                 end
                 for i = 1:size(filepath)
@@ -78,13 +78,13 @@ classdef Subject < handle
         function runs = get_runs(obj)
             runs = obj.runs;
         end
-        function set_scans(obj, niftifs)
+        function set_scans(obj, directory)
             if(size(obj.runs)==0)
                 obj.runs = [obj.runs; Run(obj.path, obj.id, obj.path_left{:})];
                 
             end
             for i = 1:size(obj.runs)
-                obj.runs(i).set_scans(niftifs);
+                obj.runs(i).set_scans(directory);
             end
             
         end
