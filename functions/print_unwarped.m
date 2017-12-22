@@ -2,13 +2,13 @@ function print_unwarped(runs)
 
 for i = 1:size(runs)
 
-   after_file = dir([runs{i} filesep 'uag*.nii']);
+   after_file = dir([runs{i}.path filesep 'uag*.nii']);
    if ~isempty(after_file)
-       before_file = dir([runs{i} filesep 'ag*.nii']);
-       before_vol = spm_vol([runs{i} filesep before_file(1).name]);
-       print_spm_image(before_vol, 'unwarped8', 'b4')
-       after_vol = spm_vol([runs{i} filesep after_file(1).name]);
-       print_spm_image(after_vol, 'unwarped8', 'after');
+       before_file = dir([runs{i}.path filesep 'ag*.nii']);
+       before_vol = spm_vol([runs{i}.path filesep before_file(1).name]);
+       print_spm_image(before_vol, 'unwarped', 'b4')
+       after_vol = spm_vol([runs{i}.path filesep after_file(1).name]);
+       print_spm_image(after_vol, 'unwarped', 'after');
        spm_image('reset');
    end
    global st

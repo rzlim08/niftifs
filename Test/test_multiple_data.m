@@ -12,32 +12,28 @@ classdef test_multiple_data < matlab.unittest.TestCase
         end
         function test_subjects(testCase)
             set_subjects(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.subjects,1), 4);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_subjects,1), 4);
         end
         function test_runs(testCase)
             set_runs(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.path_to_runs,1), 0);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_runs,1), 0);
         end
     end
     methods(Test)
         
         function test_scans(testCase)
-            set_scan_strmatch(testCase.fs, 'fs*');
+            set_scan_strmatch(testCase.fs, 'fs*.img');
             set_functional_scans(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.functional_scans,1), 214*4);
+            testCase.verifyEqual(size(testCase.fs.get_functional_scans,1), 856);
         end
         function test_get_scans(testCase)
-            set_scan_strmatch(testCase.fs, 'fs*');
+            set_scan_strmatch(testCase.fs, 'fs*.img');
             scans = get_functional_scans(testCase.fs);
             testCase.verifyEqual(size(scans,1), 214*4);
         end
-        function test_get_subjScans(testCase)
-            set_scan_strmatch(testCase.fs, 'fs*');
-            scans = get_subj_scans(testCase.fs);
-            testCase.verifyEqual(size(scans,1), 4);
-        end
+
         function test_remove_subjects(testCase)
-            set_scan_strmatch(testCase.fs, 'fs*');
+            set_scan_strmatch(testCase.fs, 'fs*.img');
             set_functional_scans(testCase.fs);
             testCase.fs.rm({'s01'});
             subjs = get_subjects(testCase.fs.subject_array);
