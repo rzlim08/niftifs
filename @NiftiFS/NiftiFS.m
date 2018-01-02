@@ -7,9 +7,7 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         top_level
         old_functionals = {};
         structural_scans = {};
-        is_nii = 0
-        is_4D = 0;
-        is_custom_suffix = 0;
+        is4D = 0;
         rm_list = struct('rm_runs',[], 'rm_subjects', [], 'rm_structurals', [])
     end
     methods

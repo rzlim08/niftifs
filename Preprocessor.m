@@ -53,7 +53,7 @@ classdef Preprocessor < handle
                     matlabbatch{1}.spm.temporal.st.ta = -1; % TA
                     matlabbatch{1}.spm.temporal.st.so = -1; % scan order
                     matlabbatch{1}.spm.temporal.st.refslice = -1; % reference slice
-                    matlabbatch{1}.spm.temporal.st.prefix = obj.niftifs.slice_timing_prefix;
+                    matlabbatch{1}.spm.temporal.st.prefix = 'a';
                 case {'realign','realignment'}
                     matlabbatch{1}.spm.spatial.realign.estwrite.data = {}; % image list
                     matlabbatch{1}.spm.spatial.realign.estwrite.eoptions.quality = 0.9; % SPM default parameters unless specified
@@ -67,7 +67,7 @@ classdef Preprocessor < handle
                     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.interp = 4;
                     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.wrap = [0 0 0];
                     matlabbatch{1}.spm.spatial.realign.estwrite.roptions.mask = 1;
-                    matlabbatch{1}.spm.spatial.realign.estwrite.roptions.prefix = obj.niftifs.realignment_prefix;
+                    matlabbatch{1}.spm.spatial.realign.estwrite.roptions.prefix = 'r';
                 case 'realignunwarp'
                     matlabbatch{1}.spm.spatial.realignunwarp.data.scans = {};
                     matlabbatch{1}.spm.spatial.realignunwarp.data.pmscan = {};
@@ -106,16 +106,16 @@ classdef Preprocessor < handle
                     matlabbatch{1}.spm.spatial.normalise.write.roptions.vox = [2 2 2]; % Voxel sizes = 2x2x2
                     matlabbatch{1}.spm.spatial.normalise.write.roptions.interp = 1;
                     matlabbatch{1}.spm.spatial.normalise.write.roptions.wrap = [0 0 0];
-                    matlabbatch{1}.spm.spatial.normalise.write.roptions.prefix = obj.niftifs.normalization_prefix;
+                    matlabbatch{1}.spm.spatial.normalise.write.roptions.prefix = 'w';
                 case 'smoothing'
                     matlabbatch{1}.spm.spatial.smooth.data = {}; % image list
                     matlabbatch{1}.spm.spatial.smooth.fwhm = [6,6,6] ;
                     matlabbatch{1}.spm.spatial.smooth.dtype = 0;
                     matlabbatch{1}.spm.spatial.smooth.im = 0;
-                    matlabbatch{1}.spm.spatial.smooth.prefix = obj.niftifs.smoothing_prefix;
+                    matlabbatch{1}.spm.spatial.smooth.prefix = 's';
                 case 'segmentation'
                     spmfiles = cell(3,1); % creates cell array and next lines insert paths for relevant spm files
-                    spmfiles{1} = fullfile(obj.spm_path, '/tpm/grey.nii');
+                    spmfiles{1} = fullfile(obj.spm_path, 'tpm/grey.nii');
                     spmfiles{2} = fullfile(obj.spm_path, '/tpm/white.nii');
                     spmfiles{3} = fullfile(obj.spm_path, '/tpm/csf.nii');
                     matlabbatch{1}.spm.spatial.preproc.data = {}; % T1 image path
@@ -136,6 +136,42 @@ classdef Preprocessor < handle
                     matlabbatch{1}.spm.spatial.preproc.opts.biasfwhm = 60;
                     matlabbatch{1}.spm.spatial.preproc.opts.samp = 3;
                     matlabbatch{1}.spm.spatial.preproc.opts.msk = {''};
+                case 'newsegmentation'
+                    matlabbatch{1}.spm.spatial.preproc.channel.vols = {};
+                    matlabbatch{1}.spm.spatial.preproc.channel.biasreg = 0.001;
+                    matlabbatch{1}.spm.spatial.preproc.channel.biasfwhm = 60;
+                    matlabbatch{1}.spm.spatial.preproc.channel.write = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(1).tpm = {[ fullfile(obj.spm_path, 'tpm', 'TPM.nii'), ',1']};
+                    matlabbatch{1}.spm.spatial.preproc.tissue(1).ngaus = 1;
+                    matlabbatch{1}.spm.spatial.preproc.tissue(1).native = [1 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(1).warped = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(2).tpm =  {[ fullfile(obj.spm_path, 'tpm', 'TPM.nii'), ',2']};
+                    matlabbatch{1}.spm.spatial.preproc.tissue(2).ngaus = 1;
+                    matlabbatch{1}.spm.spatial.preproc.tissue(2).native = [1 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(2).warped = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(3).tpm =  {[ fullfile(obj.spm_path, 'tpm', 'TPM.nii'), ',3']};
+                    matlabbatch{1}.spm.spatial.preproc.tissue(3).ngaus = 2;
+                    matlabbatch{1}.spm.spatial.preproc.tissue(3).native = [1 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(3).warped = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(4).tpm =  {[ fullfile(obj.spm_path, 'tpm', 'TPM.nii'), ',4']};
+                    matlabbatch{1}.spm.spatial.preproc.tissue(4).ngaus = 3;
+                    matlabbatch{1}.spm.spatial.preproc.tissue(4).native = [1 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(4).warped = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(5).tpm = { [ fullfile(obj.spm_path, 'tpm', 'TPM.nii'), ',5']};
+                    matlabbatch{1}.spm.spatial.preproc.tissue(5).ngaus = 4;
+                    matlabbatch{1}.spm.spatial.preproc.tissue(5).native = [1 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(5).warped = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(6).tpm =  {[ fullfile(obj.spm_path, 'tpm', 'TPM.nii'), ',6']};
+                    matlabbatch{1}.spm.spatial.preproc.tissue(6).ngaus = 2;
+                    matlabbatch{1}.spm.spatial.preproc.tissue(6).native = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.tissue(6).warped = [0 0];
+                    matlabbatch{1}.spm.spatial.preproc.warp.mrf = 1;
+                    matlabbatch{1}.spm.spatial.preproc.warp.cleanup = 1;
+                    matlabbatch{1}.spm.spatial.preproc.warp.reg = [0 0.001 0.5 0.05 0.2];
+                    matlabbatch{1}.spm.spatial.preproc.warp.affreg = 'mni';
+                    matlabbatch{1}.spm.spatial.preproc.warp.fwhm = 0;
+                    matlabbatch{1}.spm.spatial.preproc.warp.samp = 3;
+                    matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
             end
         end
         function vec = get_slice_vector(obj, number_slices, ascending, interleaved)
@@ -204,7 +240,7 @@ classdef Preprocessor < handle
                 end
             end
         end
-
+        
         function run_realignment(obj, matlabbatch, subjects)
             % run SPM realignment
             
@@ -267,18 +303,33 @@ classdef Preprocessor < handle
                 
             end
         end
+        function run_newsegmentation(obj, matlabbatch, subjects)
+            if nargin < 3
+                subjects = get_subject_array(obj.niftifs);
+            end
+            subjects = subjects.subjects;
+            for i = 1:size(subjects,1)
+                try
+                    matlabbatch{1}.spm.spatial.preproc.channel.vols = {subjects{i}.get_structural_path};
+                    spm_jobman('run', matlabbatch);
+                catch
+                    warning(['subject ' subjects{i}.get_id 'has not run']);
+                end
+                
+            end
+        end
         
-        function mean_image = get_mean_image(obj, scan, niftifs)
+        function mean_image = get_mean_image(obj, scan, directory)
             scan_folder = fileparts(scan{1,1});
-            mean_image = niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', niftifs.scan_strmatch]]);
+            mean_image = directory.expand_folders([strsplit(scan_folder, filesep), 'mean*']);
             a = 2;
             % If mean image is not matched
             if isempty(mean_image)
                 while isempty(mean_image) && obj.niftifs.scan_strmatch(a) ~= '*'
-                    mean_image = niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', niftifs.scan_strmatch(a:end)]]);
+                    mean_image = directory.expand_folders([strsplit(scan_folder, filesep), ['mean', directory.scan_strmatch(a:end)]]);
                     a = a+1;
                 end
-                mean_image = niftifs.expand_folders([strsplit(scan_folder, filesep), ['mean', niftifs.scan_strmatch(a:end)]]);
+                mean_image = directory.expand_folders([strsplit(scan_folder, filesep), ['mean', directory.scan_strmatch(a:end)]]);
             end
             
         end
@@ -301,7 +352,7 @@ classdef Preprocessor < handle
                 runs = subjects{i}.get_runs;
                 for j = 1:size(runs, 1)
                     try
-                        mean_image = get_mean_image(obj, runs(j).get_scans, obj.niftifs);
+                        mean_image = get_mean_image(obj, runs(j).get_scans, obj.niftifs.functional_directory);
                         matlabbatch{1}.spm.spatial.coreg.estimate.ref = structural_scan; % T1 image path
                         matlabbatch{1}.spm.spatial.coreg.estimate.source = mean_image; % mean image path
                         matlabbatch{1}.spm.spatial.coreg.estimate.other = runs(j).get_scans; % functional images paths
@@ -334,7 +385,7 @@ classdef Preprocessor < handle
                     continue;
                 end
                 structural_folder = fileparts(structural_scan);
-                seg_sn_file = obj.niftifs.expand_folders([strsplit(structural_folder, filesep), '*seg_sn.mat']);
+                seg_sn_file = obj.niftifs.functional_directory.expand_folders([strsplit(structural_folder, filesep), '*seg*.mat']);
                 matlabbatch{1}.spm.spatial.normalise.write.subj.matname = seg_sn_file;
                 runs = subjects{i}.get_runs;
                 for j = 1:size(runs, 1)
