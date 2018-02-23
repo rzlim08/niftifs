@@ -5,7 +5,8 @@ classdef RunScan < Run & handle
             if nargin<2
                 error('A run needs a name and a path');
             end
-            obj@Run(path, name, path_left);
+            [~, str_name, ~] = fileparts(name);
+            obj@Run(path, str_name, path_left);
         end
         function set_scans(obj, ~)
             obj.scans = [];
@@ -23,18 +24,25 @@ classdef RunScan < Run & handle
         end
         function cache(obj, from, to)
             old_path = obj.path;
-            obj.uncache_path = old_path;
             move_scans(obj, from, to);
-            obj.path = strrep(obj.path, from, to);
-            mkdir(fileparts(obj.path));
+            new_path = strrep(obj.path, from, to);
+            [folder, ~, ext] = fileparts(new_path);
+             mkdir(folder);
             copyfile(old_path, obj.path);
+            if strcmp(ext,'.img')
+                old_hdr_path =strrep(old_path, 'img', 'hdr');
+                new_hdr_path =strrep(new_path, 'img', 'hdr');
+                copyfile(old_hdr_path, new_hdr_path)
+            end
+            obj.path = new_path;
+            obj.uncache_path = old_path;
         end
         function uncache(obj)
             copyfile(fileparts(obj.path), fileparts(obj.uncache_path));
             obj.path = obj.uncache_path;
             obj.uncache_path = [];
         end
-            
+        
         function n = spm_select_get_nbframes(file)
             % spm_select_get_nbframes(file) Get the number of volumes of a 4D nifti file, excerpt from SPM12 spm_select.m
             N   = nifti(file);

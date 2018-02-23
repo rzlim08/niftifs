@@ -78,6 +78,12 @@ classdef Subject < handle
         function runs = get_runs(obj)
             runs = obj.runs;
         end
+        function runs = get_run_cell(obj)
+            runs = cell(size(obj.runs,1), 1);
+            for i = 1:size(obj.runs)
+               runs{i} = obj.runs(i);
+           end
+        end
         function set_scans(obj, directory)
             if(size(obj.runs)==0)
                 obj.runs = [obj.runs; Run(obj.path, obj.id, obj.path_left{:})];
