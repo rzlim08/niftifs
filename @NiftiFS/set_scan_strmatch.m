@@ -1,4 +1,4 @@
 function set_scan_strmatch(obj, strmatch)
 % see subject strmatch
-obj.scan_strmatch = strmatch;
+obj.functional_directory.set_scan_strmatch(strmatch);
 end

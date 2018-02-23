@@ -16,27 +16,24 @@ classdef test_soren_data < matlab.unittest.TestCase
         end
         function test_subjects(testCase)
             set_subjects(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.subjects,1), 4);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_subjects,1), 4);
         end
         function test_runs(testCase)
             set_runs(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.path_to_runs,1), 8);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_runs,1), 8);
         end
     end
     methods(Test)
         
         function test_scans(testCase)
             set_functional_scans(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.functional_scans,1), 345*8);
+            testCase.verifyEqual(size(testCase.fs.get_functional_scans,1), 345*8);
         end
         function test_get_scans(testCase)
             scans = get_functional_scans(testCase.fs);
             testCase.verifyEqual(size(scans,1), 345*8);
         end
-        function test_get_subjScans(testCase)
-            scans = get_subj_scans(testCase.fs);
-            testCase.verifyEqual(size(scans,1), 4);
-        end
+
         function test_structurals(testCase)
             scans = get_structural_scans(testCase.fs);
             testCase.verifyEqual(size(scans,1), 4);

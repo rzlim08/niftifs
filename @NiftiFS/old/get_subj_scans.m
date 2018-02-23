@@ -11,7 +11,7 @@ subject_struct = struct('name', {}, 'subject_scans', {}, 'subject_runs', {});
 
 for i=1:size(path, 1)
     subject_struct(i).name = path{i, 1};
-    subject_struct(i).subject_scans = scans(~cellfun(@isempty, strfind(scans, [path{i,1} filesep]))); 
+    subject_struct(i).subject_scans = scans(~cellfun(@isempty, strfind(scans, path{i,1}))); 
     if subject_has_runs(obj, path, i)
         subj_runs = create_run_struct(obj, path, i, subject_struct(i).subject_scans);
         if size(subj_runs)>0

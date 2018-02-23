@@ -1,4 +1,4 @@
-classdef RunScan < Run
+classdef RunScan < Run & handle
     
     methods
         function obj = RunScan(path, name, path_left)
@@ -19,18 +19,20 @@ classdef RunScan < Run
             obj.scans = scans;
         end
         function move_scans(obj, from, to)
-            obj.path = strrep(obj.path, from, to);
+            obj.scans = cellfun(@(x)(strrep(x, from, to)), obj.scans, 'UniformOutput', 0);
         end
         function cache(obj, from, to)
             old_path = obj.path;
             obj.uncache_path = old_path;
             move_scans(obj, from, to);
-            new_path = obj.path;
-            mkdir(fileparts(new_path));
-            copyfile(old_path, new_path);
+            obj.path = strrep(obj.path, from, to);
+            mkdir(fileparts(obj.path));
+            copyfile(old_path, obj.path);
         end
         function uncache(obj)
-            copyfile(obj.path, obj.uncache_path);
+            copyfile(fileparts(obj.path), fileparts(obj.uncache_path));
+            obj.path = obj.uncache_path;
+            obj.uncache_path = [];
         end
             
         function n = spm_select_get_nbframes(file)

@@ -16,11 +16,11 @@ classdef test_array_funs< matlab.unittest.TestCase
         end
         function test_subjects(testCase)
             set_subjects(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.subjects,1), 4);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_subjects,1), 4);
         end
         function test_runs(testCase)
             set_runs(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.path_to_runs,1), 8);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_runs,1), 8);
         end
     end
     methods(Test)

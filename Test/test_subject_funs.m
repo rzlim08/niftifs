@@ -16,22 +16,22 @@ classdef test_subject_funs< matlab.unittest.TestCase
         end
         function test_subjects(testCase)
             set_subjects(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.subjects,1), 4);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_subjects,1), 4);
         end
         function test_runs(testCase)
             set_runs(testCase.fs);
-            testCase.verifyEqual(size(testCase.fs.path_to_runs,1), 8);
+            testCase.verifyEqual(size(testCase.fs.subject_array.get_runs,1), 8);
         end
     end
     methods(Test)
         
         function test_add_associated(testCase)
-            Subject = testCase.fs.subject_array{1,1};
+            Subject = testCase.fs.subject_array.pop_subject;
             Subject.add_associated_matrix('G', rand(5));
             testCase.verifyTrue(isfield(Subject.associated_matrices, 'G'))
         end
         function test_get_associated(testCase)
-            Subject = testCase.fs.subject_array{1,1};
+            Subject = testCase.fs.subject_array.pop_subject;
             Subject.add_associated_matrix('G', rand(5));
             testCase.verifyTrue(isfield(Subject.associated_matrices, 'G'))
             testCase.verifyEqual(size(Subject.get_associated_matrix('G'),1), 5)
