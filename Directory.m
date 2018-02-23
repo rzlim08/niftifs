@@ -76,7 +76,7 @@ classdef Directory < handle
             
             filepath = cell([0, 1]);
             for i = 1:size(cellpath, 2)
-                only_dir = i ~= size(cellpath,2);
+                only_dir = (i ~= size(cellpath,2)) && ~isempty(cellpath{1,size(cellpath,2)});
                 entry = obj.replace_entry(cellpath{i});
                 filepath = obj.cartesian(filepath, entry, only_dir ||  ...
                     any(strcmp(cellpath{i}, {'{subjects}';'{runs}';'{groups}'})));
