@@ -6,9 +6,9 @@ for i = 1:size(runs)
    if ~isempty(after_file)
        before_file = dir([runs{i}.path filesep 'ag*.nii']);
        before_vol = spm_vol([runs{i}.path filesep before_file(1).name]);
-       print_spm_image(before_vol, 'unwarped', 'b4')
+       print_spm_image(before_vol, 'unwarped2', 'b4')
        after_vol = spm_vol([runs{i}.path filesep after_file(1).name]);
-       print_spm_image(after_vol, 'unwarped', 'after');
+       print_spm_image(after_vol, 'unwarped2', 'after');
        spm_image('reset');
    end
    global st

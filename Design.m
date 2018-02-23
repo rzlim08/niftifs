@@ -31,7 +31,8 @@ classdef Design < handle
                         eye(obj.num_bins);
                 end
             end
-            obj.path = [dir filesep 'G_' run_id];
+            [~, name, ~] = fileparts(run_id);
+            obj.path = [dir filesep 'G_'  name];
             save(obj.path, 'G');
         end
         function normalize(obj)

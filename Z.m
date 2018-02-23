@@ -7,7 +7,8 @@ classdef Z < handle
         function obj = Z(matrix, mask, path)
             Z = matrix(:, mask);
             [Z, meanZ, stdZ] = zscore(Z, 1);
-            obj.path = path;
+            [directory, fname, ~] = fileparts(path);
+            obj.path = [directory filesep fname];
             save(path, 'Z', 'meanZ', 'stdZ');
         end
         function Z = get(obj)

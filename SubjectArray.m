@@ -20,6 +20,11 @@ classdef SubjectArray < handle
                 obj.subjects(match_arr) = [];
             end
         end
+        function subject = get_subject(obj, pattern)
+            match_arr = obj.get_strmatch(get_ids(obj), pattern);
+            subject = obj.subjects(match_arr);
+            
+        end
         function split(obj, num)
             new_sa = SubjectArray();
             for i = 0:num-1

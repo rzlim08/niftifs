@@ -54,8 +54,12 @@ classdef Run < handle
             end
         end
         function uncache(obj)
-            copyfile(fileparts(obj.path{1,1}), fileparts(obj.uncache_path{1,1}));
-            obj.path = obj.uncache_path;
+            copyfile(fileparts(obj.scans{1,1}), fileparts(obj.uncache_path{1,1}));
+            obj.scans = obj.uncache_path;
+            obj.uncache_path = [];
+        end
+        function uncache_no_write(obj)
+            obj.scans = obj.uncache_path;
             obj.uncache_path = [];
         end
         function set_scans(obj, niftifs)
@@ -80,7 +84,7 @@ classdef Run < handle
         end
         function set_design_matrix(obj, onsets, num_bins, cond_names, path)
             obj.design_matrix = Design(onsets, num_bins, cond_names, size(obj.scans,1));
-            create_G(obj.design_matrix, path, obj.name);
+            create_G(obj.design_matrix, fileparts(obj.path), obj.name);
         end
         function G = get_design_matrix(obj)
             G = obj.design_matrix.get;
