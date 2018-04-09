@@ -65,7 +65,6 @@ classdef NiftiFS < handle & matlab.mixin.Copyable
         rm(obj, patterns);
         %% Methods
         new_obj = move_functionals(obj, new_dir, subjs);
-        
         s = summary(obj);
         saveas(obj, filename);
     end

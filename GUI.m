@@ -369,6 +369,7 @@ fs.set_structural_dirstruct(get(handles.struct_edit, 'String'));
 fs.set_subject_strmatch(get(handles.subject_strmatch, 'String'));
 fs.set_run_strmatch(get(handles.run_strmatch, 'String'));
 fs.set_scan_strmatch(get(handles.scan_strmatch, 'String'));
+fs.set_structural_strmatch(get(handles.structural_strmatch, 'String'));
 fs.set_subjects;
 
 set_lists(handles, fs);
@@ -390,6 +391,7 @@ scans = fs.get_functional_scans;
 set(handles.scan_list, 'String',  strrep(scans, fs.top_level, ''));
 
 structurals = fs.get_structural_scans;
+fs.set_structural_scans;
 set(handles.structural_list, 'String', strrep(structurals, fs.top_level, ''))
 
 

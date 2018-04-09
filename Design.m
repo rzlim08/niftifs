@@ -20,6 +20,21 @@ classdef Design < handle
             obj.num_scans = num_scans;
             
         end
+        
+        function G = createG(obj)
+            G = zeros(obj.num_scans, obj.num_bins*obj.num_conds);
+            for j = 1:obj.num_conds
+                for i = 1:size(obj.onsets,2)
+                    G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ... 
+                        (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins) = ...
+                        G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ...
+                        (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins)|...
+                        eye(obj.num_bins);
+                end
+            end
+        end
+        
+        % Remove eventually
         function create_G(obj, dir, run_id)
             G = zeros(obj.num_scans, obj.num_bins*obj.num_conds);
             for j = 1:obj.num_conds

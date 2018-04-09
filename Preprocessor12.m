@@ -1,11 +1,4 @@
-classdef Preprocessor12 < handle
-    properties
-        output_dir = '';
-        niftifs;
-        spm_path = '';
-        asc;
-        interleaved;
-    end
+classdef Preprocessor12 < Preprocessing & handle 
     methods
         function obj = Preprocessor12(output_dir, niftifs, spm_path)
             % Constructor that takes an output directory, NiftiFS file, and
@@ -22,6 +15,7 @@ classdef Preprocessor12 < handle
             obj.niftifs = niftifs;
             obj.output_dir = output_dir;
         end
+        
         function matlabbatch = get_matlabbatch(obj, step)
             % Gets the batch parameters.
             clear('matlabbatch');
@@ -76,7 +70,6 @@ classdef Preprocessor12 < handle
                     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.sep = [4 2];
                     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.tol = [0.02 0.02 0.02 0.001 0.001 0.001 0.01 0.01 0.01 0.001 0.001 0.001];
                     matlabbatch{1}.spm.spatial.coreg.estimate.eoptions.fwhm = [7 7];
-                    
                 case 'normalization'
                     matlabbatch{1}.spm.spatial.normalise.estwrite.subj.vol = {}; % T1 seg sn
                     matlabbatch{1}.spm.spatial.normalise.estwrite.subj.resample = {}; % image list
@@ -136,91 +129,7 @@ classdef Preprocessor12 < handle
                     matlabbatch{1}.spm.spatial.preproc.warp.write = [0 0];
             end
         end
-        function setpath(obj)
-            % Helper function to set the desired path to SPM to the top of
-            % the path
-            addpath(genpath(obj.spm_path));
-        end
         
-        function dir = initialize_spm(obj, task)
-            % initialize the SPM functions cd's to the output directory if
-            % needed
-            if nargin < 2
-                task = '';
-            end
-            dir = pwd;
-            setpath(obj);
-            spm_jobman('initcfg');
-            if strcmp(task, 'realign') || strcmp(task,'coregistration')
-                cd(obj.output_dir);
-                spm('FnUIsetup','realign' ,1,1);
-            end
-        end
-        function vec = get_slice_vector(obj, number_slices, ascending, interleaved)
-            % Takes the number of slices as number_slices, and 2 flags to
-            % set if the order of slices is ascending or descending, or
-            % interleaved.
-            % eg. get_slice_vector(obj, 30, 1, 1)
-            obj.asc = ascending;
-            obj.interleaved = interleaved;
-            
-            if ~interleaved
-                if ascending
-                    vec = 1:1:number_slices;
-                elseif ~ascending
-                    vec = number_slices:-1:1;
-                end
-            else
-                if ascending && mod(number_slices,2)~=0
-                    vec = [1:2:number_slices 2:2:number_slices-1];
-                elseif ascending && mod(number_slices,2)==0
-                    vec = [1:2:number_slices-1 2:2:number_slices];
-                elseif ~ascending && mod(number_slices,2)~=0
-                    vec = [number_slices:-2:1 number_slices-1:-2:2];
-                elseif ~ascending && mod(number_slices,2)==0
-                    vec = [number_slices:-2:2 number_slices-1:-2:1];
-                end
-                
-            end
-        end
-        function batch = create_slice_timing(obj, TR, slice_vector, ref_slice, subject_array)
-            % runs SPM slice timing
-            % eg. run_slice_timing(obj, obj.get_matlabbatch('slice_timing'), 2,
-            %   get_slice_vector(obj, 30, 1, 1), 20,
-            %   get_subj_scans(obj.niftifs))
-            if nargin < 6
-                subject_array = get_subject_array(obj.niftifs);
-            end
-            number_slices = max(slice_vector);
-            TA = TR-(TR/number_slices);
-            matlabbatch{1}.spm.temporal.st.scans = {}; % image list
-            matlabbatch{1}.spm.temporal.st.nslices = number_slices; % number of slices
-            matlabbatch{1}.spm.temporal.st.tr = TR; % TR
-            matlabbatch{1}.spm.temporal.st.ta = TA; % TA
-            matlabbatch{1}.spm.temporal.st.so = slice_vector; % scan order
-            matlabbatch{1}.spm.temporal.st.refslice = ref_slice;
-            matlabbatch{1}.spm.temporal.st.prefix = 'a';
-            initialize_spm(obj);
-            runs = subject_array.get_runs;
-            batch = cell(size(runs,1), 1);
-            for i=1:size(runs, 1)
-                try
-                    scans = runs{i}.get_scans;
-                    vol = spm_vol(strrep(scans{1,1}, ',1', ''));
-                    if size(vol,1)>1
-                        vol = vol(1);
-                    end
-                    if min(vol.dim) ~= max(slice_vector)
-                        matlabbatch{1}.spm.temporal.st.nslices = min(vol.dim);
-                        matlabbatch{1}.spm.temporal.st.so = obj.get_slice_vector(min(vol.dim), obj.asc, obj.interleaved);
-                    end
-                    matlabbatch{1}.spm.temporal.st.scans = {runs{i}.get_scans};
-                    batch(i) = matlabbatch;
-                catch
-                    warning(['Run: ' num2str(i) ' has not been created']);
-                end
-            end
-        end
         function batch = run_newsegmentation(obj, matlabbatch, subjects)
             if nargin < 3
                 subjects = get_subject_array(obj.niftifs);
@@ -237,6 +146,7 @@ classdef Preprocessor12 < handle
                 
             end
         end
+        
         function batch = run_normalization(obj, matlabbatch, subjects)
             % run SPM normalization
             
@@ -268,6 +178,7 @@ classdef Preprocessor12 < handle
             end
             batch = batch';
         end
+        
         function batch = run_smoothing(obj, matlabbatch, subjects)
             % run SPM smoothing
             % run_smoothing(obj, obj.get_matlabbatch('smoothing'), subjs)
@@ -283,20 +194,6 @@ classdef Preprocessor12 < handle
                 
             end
             batch = batch';
-        end
-        function run_spmjobman(obj, batch)
-            parfor i = 1:size(batch,1)
-                spm_jobman('run', batch(i));
-            end
-        end
-        
-        function runs = get_runs(~, x)
-            
-            if isa(x, 'SubjectArray')
-                runs = x.get_runs;
-            else
-                runs = x;
-            end
         end
     end
     
