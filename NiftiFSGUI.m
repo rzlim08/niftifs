@@ -1,35 +1,35 @@
-function varargout = GUI(varargin)
-% GUI MATLAB code for GUI.fig
-%      GUI, by itself, creates a new GUI or raises the existing
+function varargout = NiftiFSGUI(varargin)
+% NiftiFSGUI MATLAB code for NiftiFSGUI.fig
+%      NiftiFSGUI, by itself, creates a new NiftiFSGUI or raises the existing
 %      singleton*.
 %
-%      H = GUI returns the handle to a new GUI or the handle to
+%      H = NiftiFSGUI returns the handle to a new NiftiFSGUI or the handle to
 %      the existing singleton*.
 %
-%      GUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in GUI.M with the given input arguments.
+%      NiftiFSGUI('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in NiftiFSGUI.M with the given input arguments.
 %
-%      GUI('Property','Value',...) creates a new GUI or raises
+%      NiftiFSGUI('Property','Value',...) creates a new NiftiFSGUI or raises
 %      the existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before GUI_OpeningFcn gets called.  An
+%      applied to the NiftiFSGUI before NiftiFSGUI_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to GUI_OpeningFcn via varargin.
+%      stop.  All inputs are passed to NiftiFSGUI_OpeningFcn via varargin.
 %
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      *See NiftiFSGUI Options on GUIDE's Tools menu.  Choose "NiftiFSGUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help GUI
+% Edit the above text to modify the response to help NiftiFSGUI
 
-% Last Modified by GUIDE v2.5 22-Feb-2018 15:02:03
+% Last Modified by GUIDE v2.5 07-Apr-2018 17:30:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @GUI_OpeningFcn, ...
-                   'gui_OutputFcn',  @GUI_OutputFcn, ...
+                   'gui_OpeningFcn', @NiftiFSGUI_OpeningFcn, ...
+                   'gui_OutputFcn',  @NiftiFSGUI_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -43,25 +43,25 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before GUI is made visible.
-function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before NiftiFSGUI is made visible.
+function NiftiFSGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to GUI (see VARARGIN)
+% varargin   command line arguments to NiftiFSGUI (see VARARGIN)
 
-% Choose default command line output for GUI
+% Choose default command line output for NiftiFSGUI
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
-% UIWAIT makes GUI wait for user response (see UIRESUME)
+% UIWAIT makes NiftiFSGUI wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = GUI_OutputFcn(hObject, eventdata, handles)
+function varargout = NiftiFSGUI_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -369,6 +369,7 @@ fs.set_structural_dirstruct(get(handles.struct_edit, 'String'));
 fs.set_subject_strmatch(get(handles.subject_strmatch, 'String'));
 fs.set_run_strmatch(get(handles.run_strmatch, 'String'));
 fs.set_scan_strmatch(get(handles.scan_strmatch, 'String'));
+fs.set_structural_strmatch(get(handles.structural_strmatch, 'String'));
 fs.set_subjects;
 
 set_lists(handles, fs);
@@ -390,6 +391,7 @@ scans = fs.get_functional_scans;
 set(handles.scan_list, 'String',  strrep(scans, fs.top_level, ''));
 
 structurals = fs.get_structural_scans;
+fs.set_structural_scans;
 set(handles.structural_list, 'String', strrep(structurals, fs.top_level, ''))
 
 
@@ -467,8 +469,8 @@ function save_Callback(hObject, eventdata, handles)
 % hObject    handle to save (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-niftifs = 
-handles.fs.saveas('niftifs');
+niftifs = handles.fs;
+niftifs.saveas('niftifs');
 
 
 

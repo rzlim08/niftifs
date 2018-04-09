@@ -107,6 +107,12 @@ classdef Run < handle
         function beta = get_beta(obj)
             beta = obj.betas;
         end
+        function add_associated_matrix(obj, name, data)
+            obj.associated_matrices.(name) = data;
+        end
+        function mat = get_associated_matrix(obj, name)
+            mat = obj.associated_matrices.(name);
+        end
         function scans = get_scans(obj)
             scans = obj.scans;
         end
