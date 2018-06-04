@@ -22,7 +22,7 @@ function varargout = NiftiFSGUI(varargin)
 
 % Edit the above text to modify the response to help NiftiFSGUI
 
-% Last Modified by GUIDE v2.5 07-Apr-2018 17:30:27
+% Last Modified by GUIDE v2.5 25-Apr-2018 14:48:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -205,6 +205,10 @@ add_string(handles.func_edit, '{scans}');
 function add_string(handle, string)
 % handle handle to add string to
 % string string to add to end of handle
+str = get(handle, 'String');
+if str(end) ~= filesep
+    set(handle, 'String', [str, filesep]);
+end
 set(handle, 'String', [get(handle, 'String') string filesep])
 
 
@@ -360,8 +364,10 @@ function create_button_Callback(hObject, eventdata, handles)
 % hObject    handle to create_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+set(handles.working_tag, 'String', 'Working');
 
-% TODO: change this when you can change base directory
+guidata(hObject, handles);
+drawnow;
 fs = NiftiFS(get(handles.working_directory, 'String'));
 fs.set_is4D(get(handles.is_4D, 'Value'));
 fs.set_functional_dirstruct(get(handles.func_edit, 'String'));
@@ -375,7 +381,7 @@ fs.set_subjects;
 set_lists(handles, fs);
 
 handles.fs = fs;
-
+set(handles.working_tag, 'String', 'Done');
 guidata(hObject, handles);
 
 function set_lists(handles, fs)
@@ -505,3 +511,14 @@ val = get(handles.to_remove, 'String');
 handles.fs.rm({val});
 set_lists(handles, handles.fs);
 guidata(hObject, handles);
+
+
+% --- Executes on button press in browse.
+function browse_Callback(hObject, eventdata, handles)
+% hObject    handle to browse (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+folder = uigetdir;
+if folder ~= 0
+set(handles.working_directory, 'String', folder);
+end
