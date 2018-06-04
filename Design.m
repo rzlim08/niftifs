@@ -11,9 +11,16 @@ classdef Design < handle
     methods
         function obj = Design(onsets, num_bins, cond_names, num_scans)
             if(size(cond_names,1) ~= size(onsets,1))
-               error('onsets must be a matrix of size (num_conds*num_onsets)'); 
+                error('onsets must be a matrix of size (num_conds*num_onsets)');
             end
-            obj.onsets = ceil(onsets);
+            if iscell(onsets)
+                for i = 1:size(onsets,1)
+                    onsets{i} = ceil(onsets{i});
+                end
+            else
+                onsets = ceil(onsets);
+            end
+            obj.onsets = onsets;
             obj.num_bins = num_bins;
             obj.cond_names = cond_names;
             obj.num_conds = size(cond_names,1);
@@ -22,14 +29,28 @@ classdef Design < handle
         end
         
         function G = createG(obj)
-            G = zeros(obj.num_scans, obj.num_bins*obj.num_conds);
-            for j = 1:obj.num_conds
-                for i = 1:size(obj.onsets,2)
-                    G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ... 
-                        (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins) = ...
+            if iscell(obj.onsets)
+                G = zeros(obj.num_scans, obj.num_bins*obj.num_conds);
+                for j = 1:obj.num_conds
+                    cond_onsets = obj.onsets{j};
+                    for i = 1:size(obj.onsets{j},2)
+                        G(cond_onsets(i):cond_onsets(i)+obj.num_bins-1, ...
+                            (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins) = ...
+                            G(cond_onsets(i):cond_onsets(i)+obj.num_bins-1, ...
+                            (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins)|...
+                            eye(obj.num_bins);
+                    end
+                end
+            else
+                G = zeros(obj.num_scans, obj.num_bins*obj.num_conds);
+                for j = 1:obj.num_conds
+                    for i = 1:size(obj.onsets,2)
                         G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ...
-                        (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins)|...
-                        eye(obj.num_bins);
+                            (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins) = ...
+                            G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ...
+                            (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins)|...
+                            eye(obj.num_bins);
+                    end
                 end
             end
         end
@@ -39,7 +60,7 @@ classdef Design < handle
             G = zeros(obj.num_scans, obj.num_bins*obj.num_conds);
             for j = 1:obj.num_conds
                 for i = 1:size(obj.onsets,2)
-                    G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ... 
+                    G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ...
                         (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins) = ...
                         G(obj.onsets(j, i):obj.onsets(j,i)+obj.num_bins-1, ...
                         (j-1)*obj.num_bins+1:(j-1)*obj.num_bins+obj.num_bins)|...
@@ -56,7 +77,7 @@ classdef Design < handle
             save(obj.path, 'G')
         end
         function G = get(obj)
-           load(obj.path) 
+            load(obj.path)
         end
     end
     
