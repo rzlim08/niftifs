@@ -58,7 +58,11 @@ classdef Directory < handle
             subjects =  expand_folders(obj, [strsplit(ndir{1}, filesep) '{subjects}']);
         end
         function structurals = get_structurals(obj)
-            structurals = expand_folders(obj, strsplit(obj.dirstruct, filesep));
+            structural_dirstruct = obj.dirstruct;
+            if structural_dirstruct(end) == filesep
+                structural_dirstruct = structural_dirstruct(1:end-1);
+            end
+            structurals = expand_folders(obj, strsplit(structural_dirstruct, filesep));
         end
         function last = get_last_folder(str)
             split = strsplit(str, filesep);
@@ -67,7 +71,6 @@ classdef Directory < handle
         function dirstruct = get_dirstruct(obj)
             dirstruct = obj.dirstruct;
         end
-        
         
         function filepath = expand_folders(obj, cellpath)
             % takes a dirstruct split by folder and returns the list of
